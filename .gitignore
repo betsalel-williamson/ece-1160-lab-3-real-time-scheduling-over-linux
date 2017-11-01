@@ -50,3 +50,19 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# idea files
+.idea/
+cmake-build-debug/
+
+# misc files
+_build/
+*.log
+*config.txt
+*(Autosaved)*
+*~*
+*.xlsx
+*.docx
+
+# os X files
+.DS_Store
