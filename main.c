@@ -42,7 +42,7 @@ int main() {
 
     runSchedulingProgram(10, 25, 15, 60, RMSStrategy, "RMSStrategy");
     runSchedulingProgram(20, 50, 35, 100, RMSStrategy, "RMSStrategy");
-    runSchedulingProgram(20, 50, 35, 60, RMSStrategy, "RMSStrategy");
+    runSchedulingProgram(20, 50, 35, 40, RMSStrategy, "RMSStrategy");
 
     runSchedulingProgram(10, 20, 25, 50, EDFStrategy, "EDFStrategy");
     runSchedulingProgram(25, 50, 35, 80, EDFStrategy, "EDFStrategy");
