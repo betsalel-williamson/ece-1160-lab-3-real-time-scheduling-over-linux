@@ -1,55 +1,108 @@
 #include<stdio.h>                      // A execution time 10, period: 20
 #include <stdlib.h>
-#include <getopt.h>
-#include <ctype.h>
 
-#ifdef DEBUG
-#define INPUT_PERIOD_A
-#define EXECUTION_A
-#define INPUT_PERIOD_B
-#define EXECUTION_B
+#ifndef DEBUG
+#define DEBUG
 #endif
 
+#define TEST1
+
+#ifdef DEBUG
+
+#ifdef TEST1
+#define INPUT_PERIOD_A  10
+#define EXECUTION_A     25
+#define INPUT_PERIOD_B  25
+#define EXECUTION_B     60
+#endif
+
+#ifdef TEST2
+#define INPUT_PERIOD_A  20
+#define EXECUTION_A     50
+#define INPUT_PERIOD_B  35
+#define EXECUTION_B     100
+#endif
+
+#endif
+
+#ifndef ERROR
 #define ERROR -1
+#endif
+
+/* Flag set by ‘--verbose’. */
+static int verbose_flag;
+
 // B execution time 25, period: 50
 int main(int argc, const char *argv[]) {
 
-    int opt;
-    char *avalue = NULL;
-    char *bvalue = NULL;
-    while ((opt = getopt (argc, argv, "abc:")) != -1)
-        switch (opt)
-        {
-            case 'a':
-                avalue = optarg;
-                break;
-            case 'b':
-                bvalue = optarg;
-                break;
-            case '?':
-                if (optopt == 'a')
-                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-                else if (optopt == 'b')
-                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-                else if (isprint (optopt))
-                    fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-                else
-                    fprintf (stderr,
-                             "Unknown option character `\\x%x'.\n",
-                             optopt);
-                return 1;
-            default:
-                abort ();
-        }
-    printf ("avalue = %s, bvalue = %s\n",
-            avalue, bvalue);
-    printf("\n");
-
-    for (int i=1; i<argc; i++) {
-        printf("%s\n",argv[i]);
-
-
-    }
+//    int c;
+//
+//    while (1)
+//    {
+//        static struct option long_options[] =
+//                {
+//                        /* These options don’t set a flag.
+//                           We distinguish them by their indices. */
+//                        {"firstTrace",     required_argument,       0, 'a'},
+//                        {"secondTrace",  required_argument,       0, 'b'}
+//                };
+//        /* getopt_long stores the option index here. */
+//        int option_index = 0;
+//
+//        c = getopt_long (argc, (char *const *) argv, "ab:",
+//                         long_options, &option_index);
+//
+//        /* Detect the end of the options. */
+//        if (c == -1)
+//            break;
+//
+//        switch (c)
+//        {
+//            case 0:
+//                /* If this option set a flag, do nothing else now. */
+//                if (long_options[option_index].flag != 0)
+//                    break;
+//                printf ("option %s", long_options[option_index].name);
+//                if (optarg)
+//                    printf (" with arg %s", optarg);
+//                printf ("\n");
+//                break;
+//
+//            case 'a':
+//                printf ("option -a with value `%s'\n", optarg);
+//                break;
+//            case 'b':
+//                printf ("option -b with value `%s'\n", optarg);
+//                break;
+//            case '?':
+//                /* getopt_long already printed an error message. */
+//                break;
+//
+//            default:
+//                abort ();
+//        }
+//    }
+//
+//    /* Instead of reporting ‘--verbose’
+//       and ‘--brief’ as they are encountered,
+//       we report the final status resulting from them. */
+//    if (verbose_flag)
+//        puts ("verbose flag is set");
+//
+//    /* Print any remaining command line arguments (not options). */
+//    if (optind < argc)
+//    {
+//        printf ("non-option ARGV-elements: ");
+//        while (optind < argc)
+//            printf ("%s ", argv[optind++]);
+//        putchar ('\n');
+//    }    printf("\n");
+//
+//    for (int i=1; i<argc; i++) {
+//        printf("%s\n",argv[i]);
+//
+//
+//    }
 
 
     // if we don't have any input then ask for input
@@ -61,13 +114,25 @@ int main(int argc, const char *argv[]) {
  											i, j, a, b, to record status of each process*/
     int numa = 0, numb = 0;                         //accumulated execution time
     int T;
+
     printf("\t\t\t------------------------------------------------\n");
     printf("\t\t\trate monotonic schedule algorithm\n");
     printf("\t\t\t------------------------------------------------\n");
-    printf("please input period and execution for A process\n");
-    scanf("%d%d", &cycA, &serveA);
-    printf("please input period and execution for B process\n");
-    scanf("%d%d", &cycB, &serveB);
+
+//    printf("please input period and execution for A process\n");
+//    scanf("%d%d", &cycA, &serveA);
+//    printf("please input period and execution for B process\n");
+//    scanf("%d%d", &cycB, &serveB);
+
+    cycA = INPUT_PERIOD_A;
+    serveA = EXECUTION_A;
+
+    cycB = INPUT_PERIOD_B;
+    serveB = EXECUTION_B;
+
+    printf("period and execution for A process: %d %d\n", cycA, serveA);
+    printf("period and execution for B process: %d %d\n", cycB, serveB);
+
     m = (float) serveA / cycA + (float) serveB / cycB;
 
 
