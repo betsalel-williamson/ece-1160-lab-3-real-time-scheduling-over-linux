@@ -429,7 +429,7 @@ $$   // show up in the generated code.
 // declaring it (nor can you).  This allows the matcher to be
 // polymorphic.  For example, IsEven() can be used to match any type
 // where the value of "(arg % 2) == 0" can be implicitly converted to
-// a bool.  In the "Bar(IsEven())" example above, if method Bar()
+// a bool.  In the "Bar(IsEven())" example above, if strategy Bar()
 // takes an int, 'arg_type' will be int; if it takes an unsigned long,
 // 'arg_type' will be unsigned long; and so on.
 //

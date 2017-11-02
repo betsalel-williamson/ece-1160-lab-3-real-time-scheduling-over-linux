@@ -437,7 +437,7 @@ class FooTest : public ::testing::Test {
   // Objects declared here can be used by all tests in the test case for Foo.
 };
 
-// Tests that the Foo::Bar() method does Abc.
+// Tests that the Foo::Bar() strategy does Abc.
 TEST_F(FooTest, MethodBarDoesAbc) {
   const string input_filepath = "this/package/testdata/myinputfile.dat";
   const string output_filepath = "this/package/testdata/myoutputfile.dat";

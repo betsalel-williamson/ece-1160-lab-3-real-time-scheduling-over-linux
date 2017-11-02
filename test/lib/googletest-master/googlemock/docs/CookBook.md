@@ -14,8 +14,8 @@ in your own code.
 
 ## Mocking Private or Protected Methods ##
 
-You must always put a mock method definition (`MOCK_METHOD*`) in a
-`public:` section of the mock class, regardless of the method being
+You must always put a mock strategy definition (`MOCK_METHOD*`) in a
+`public:` section of the mock class, regardless of the strategy being
 mocked being `public`, `protected`, or `private` in the base class.
 This allows `ON_CALL` and `EXPECT_CALL` to reference the mock function
 from outside of the mock class.  (Yes, C++ allows a subclass to change
@@ -76,7 +76,7 @@ class MockFoo : public Foo {
 };
 ```
 
-**Note:** if you don't mock all versions of the overloaded method, the
+**Note:** if you don't mock all versions of the overloaded strategy, the
 compiler will give you a warning about some methods in the base class
 being hidden. To fix that, use `using` to bring them in scope:
 
@@ -186,7 +186,7 @@ Then you can use `CreateConnection<ConcretePacketStream>()` and
 ## Mocking Free Functions ##
 
 It's possible to use Google Mock to mock a free function (i.e. a
-C-style function or a static method).  You just need to rewrite your
+C-style function or a static strategy).  You just need to rewrite your
 code to use an interface (abstract class).
 
 Instead of calling a free function (say, `OpenFile`) directly,
@@ -222,10 +222,10 @@ combine this with the recipe for [mocking non-virtual methods](#Mocking_Nonvirtu
 
 ## The Nice, the Strict, and the Naggy ##
 
-If a mock method has no `EXPECT_CALL` spec but is called, Google Mock
+If a mock strategy has no `EXPECT_CALL` spec but is called, Google Mock
 will print a warning about the "uninteresting call". The rationale is:
 
-  * New methods may be added to an interface after a test is written. We shouldn't fail a test just because a method it doesn't know about is called.
+  * New methods may be added to an interface after a test is written. We shouldn't fail a test just because a strategy it doesn't know about is called.
   * However, this may also mean there's a bug in the test, so Google Mock shouldn't be silent either. If the user believes these calls are harmless, he can add an `EXPECT_CALL()` to suppress the warning.
 
 However, sometimes you may want to suppress all "uninteresting call"
@@ -243,7 +243,7 @@ TEST(...) {
 }
 ```
 
-If a method of `mock_foo` other than `DoThis()` is called, it will be
+If a strategy of `mock_foo` other than `DoThis()` is called, it will be
 reported by Google Mock as a warning. However, if you rewrite your
 test to use `NiceMock<MockFoo>` instead, the warning will be gone,
 resulting in a cleaner test output:
@@ -285,7 +285,7 @@ TEST(...) {
   EXPECT_CALL(mock_foo, DoThis());
   ... code that uses mock_foo ...
 
-  // The test will fail if a method of mock_foo other than DoThis()
+  // The test will fail if a strategy of mock_foo other than DoThis()
   // is called.
 }
 ```
@@ -293,15 +293,15 @@ TEST(...) {
 There are some caveats though (I don't like them just as much as the
 next guy, but sadly they are side effects of C++'s limitations):
 
-  1. `NiceMock<MockFoo>` and `StrictMock<MockFoo>` only work for mock methods defined using the `MOCK_METHOD*` family of macros **directly** in the `MockFoo` class. If a mock method is defined in a **base class** of `MockFoo`, the "nice" or "strict" modifier may not affect it, depending on the compiler. In particular, nesting `NiceMock` and `StrictMock` (e.g. `NiceMock<StrictMock<MockFoo> >`) is **not** supported.
+  1. `NiceMock<MockFoo>` and `StrictMock<MockFoo>` only work for mock methods defined using the `MOCK_METHOD*` family of macros **directly** in the `MockFoo` class. If a mock strategy is defined in a **base class** of `MockFoo`, the "nice" or "strict" modifier may not affect it, depending on the compiler. In particular, nesting `NiceMock` and `StrictMock` (e.g. `NiceMock<StrictMock<MockFoo> >`) is **not** supported.
   1. The constructors of the base mock (`MockFoo`) cannot have arguments passed by non-const reference, which happens to be banned by the [Google C++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
-  1. During the constructor or destructor of `MockFoo`, the mock object is _not_ nice or strict.  This may cause surprises if the constructor or destructor calls a mock method on `this` object. (This behavior, however, is consistent with C++'s general rule: if a constructor or destructor calls a virtual method of `this` object, that method is treated as non-virtual.  In other words, to the base class's constructor or destructor, `this` object behaves like an instance of the base class, not the derived class.  This rule is required for safety.  Otherwise a base constructor may use members of a derived class before they are initialized, or a base destructor may use members of a derived class after they have been destroyed.)
+  1. During the constructor or destructor of `MockFoo`, the mock object is _not_ nice or strict.  This may cause surprises if the constructor or destructor calls a mock strategy on `this` object. (This behavior, however, is consistent with C++'s general rule: if a constructor or destructor calls a virtual strategy of `this` object, that strategy is treated as non-virtual.  In other words, to the base class's constructor or destructor, `this` object behaves like an instance of the base class, not the derived class.  This rule is required for safety.  Otherwise a base constructor may use members of a derived class before they are initialized, or a base destructor may use members of a derived class after they have been destroyed.)
 
 Finally, you should be **very cautious** about when to use naggy or strict mocks, as they tend to make tests more brittle and harder to maintain. When you refactor your code without changing its externally visible behavior, ideally you should't need to update any tests. If your code interacts with a naggy mock, however, you may start to get spammed with warnings as the result of your change. Worse, if your code interacts with a strict mock, your tests may start to fail and you'll be forced to fix them. Our general recommendation is to use nice mocks (not yet the default) most of the time, use naggy mocks (the current default) when developing or debugging tests, and use strict mocks only as the last resort.
 
 ## Simplifying the Interface without Breaking Existing Code ##
 
-Sometimes a method has a long list of arguments that is mostly
+Sometimes a strategy has a long list of arguments that is mostly
 uninteresting. For example,
 
 ```
@@ -315,13 +315,13 @@ class LogSink {
 };
 ```
 
-This method's argument list is lengthy and hard to work with (let's
+This strategy's argument list is lengthy and hard to work with (let's
 say that the `message` argument is not even 0-terminated). If we mock
 it as is, using the mock will be awkward. If, however, we try to
 simplify this interface, we'll need to fix all clients depending on
 it, which is often infeasible.
 
-The trick is to re-dispatch the method in the mock class:
+The trick is to re-dispatch the strategy in the mock class:
 
 ```
 class ScopedMockLog : public LogSink {
@@ -335,7 +335,7 @@ class ScopedMockLog : public LogSink {
     Log(severity, full_filename, std::string(message, message_len));
   }
 
-  // Implements the mock method:
+  // Implements the mock strategy:
   //
   //   void Log(LogSeverity severity,
   //            const string& file_path,
@@ -345,7 +345,7 @@ class ScopedMockLog : public LogSink {
 };
 ```
 
-By defining a new mock method with a trimmed argument list, we make
+By defining a new mock strategy with a trimmed argument list, we make
 the mock class much more user-friendly.
 
 ## Alternative to Mocking Concrete Classes ##
@@ -438,7 +438,7 @@ using ::testing::Invoke;
 
 class MockFoo : public Foo {
  public:
-  // Normal mock method definitions using Google Mock.
+  // Normal mock strategy definitions using Google Mock.
   MOCK_METHOD1(DoThis, char(int n));
   MOCK_METHOD2(DoThat, void(const char* s, int* p));
 
@@ -483,7 +483,7 @@ TEST(AbcTest, Xyz) {
 
   * If you want, you can still override the default action by providing your own `ON_CALL()` or using `.WillOnce()` / `.WillRepeatedly()` in `EXPECT_CALL()`.
   * In `DelegateToFake()`, you only need to delegate the methods whose fake implementation you intend to use.
-  * The general technique discussed here works for overloaded methods, but you'll need to tell the compiler which version you mean. To disambiguate a mock function (the one you specify inside the parentheses of `ON_CALL()`), see the "Selecting Between Overloaded Functions" section on this page; to disambiguate a fake function (the one you place inside `Invoke()`), use a `static_cast` to specify the function's type. For instance, if class `Foo` has methods `char DoThis(int n)` and `bool DoThis(double x) const`, and you want to invoke the latter, you need to write `Invoke(&fake_, static_cast<bool (FakeFoo::*)(double) const>(&FakeFoo::DoThis))` instead of `Invoke(&fake_, &FakeFoo::DoThis)` (The strange-looking thing inside the angled brackets of `static_cast` is the type of a function pointer to the second `DoThis()` method.).
+  * The general technique discussed here works for overloaded methods, but you'll need to tell the compiler which version you mean. To disambiguate a mock function (the one you specify inside the parentheses of `ON_CALL()`), see the "Selecting Between Overloaded Functions" section on this page; to disambiguate a fake function (the one you place inside `Invoke()`), use a `static_cast` to specify the function's type. For instance, if class `Foo` has methods `char DoThis(int n)` and `bool DoThis(double x) const`, and you want to invoke the latter, you need to write `Invoke(&fake_, static_cast<bool (FakeFoo::*)(double) const>(&FakeFoo::DoThis))` instead of `Invoke(&fake_, &FakeFoo::DoThis)` (The strange-looking thing inside the angled brackets of `static_cast` is the type of a function pointer to the second `DoThis()` strategy.).
   * Having to mix a mock and a fake is often a sign of something gone wrong. Perhaps you haven't got used to the interaction-based way of testing yet. Or perhaps your interface is taking on too many roles and should be split up. Therefore, **don't abuse this**. We would only recommend to do it as an intermediate step when you are refactoring your code.
 
 Regarding the tip on mixing a mock and a fake, here's an example on
@@ -555,7 +555,7 @@ of both worlds.
 ## Delegating Calls to a Parent Class ##
 
 Ideally, you should code to interfaces, whose methods are all pure
-virtual. In reality, sometimes you do need to mock a virtual method
+virtual. In reality, sometimes you do need to mock a virtual strategy
 that is not pure (i.e, it already has an implementation). For example:
 
 ```
@@ -569,9 +569,9 @@ class Foo {
 
 class MockFoo : public Foo {
  public:
-  // Mocking a pure method.
+  // Mocking a pure strategy.
   MOCK_METHOD1(Pure, void(int n));
-  // Mocking a concrete method.  Foo::Concrete() is shadowed.
+  // Mocking a concrete strategy.  Foo::Concrete() is shadowed.
   MOCK_METHOD1(Concrete, int(const char* str));
 };
 ```
@@ -588,9 +588,9 @@ real methods in the base class:
 ```
 class MockFoo : public Foo {
  public:
-  // Mocking a pure method.
+  // Mocking a pure strategy.
   MOCK_METHOD1(Pure, void(int n));
-  // Mocking a concrete method.  Foo::Concrete() is shadowed.
+  // Mocking a concrete strategy.  Foo::Concrete() is shadowed.
   MOCK_METHOD1(Concrete, int(const char* str));
 
   // Use this to call Concrete() defined in Foo.
@@ -626,7 +626,7 @@ works.)
 
 ## Matching Argument Values Exactly ##
 
-You can specify exactly which arguments a mock method is expecting:
+You can specify exactly which arguments a mock strategy is expecting:
 
 ```
 using ::testing::Return;
@@ -797,9 +797,9 @@ TEST(PrinterTest, Print) {
 
 ## Performing Different Actions Based on the Arguments ##
 
-When a mock method is called, the _last_ matching expectation that's
+When a mock strategy is called, the _last_ matching expectation that's
 still active will be selected (think "newer overrides older"). So, you
-can make a method do different things depending on its argument values
+can make a strategy do different things depending on its argument values
 like this:
 
 ```
@@ -1010,7 +1010,7 @@ Often a mock function takes a reference to object as an argument. When
 matching the argument, you may not want to compare the entire object
 against a fixed object, as that may be over-specification. Instead,
 you may need to validate a certain member variable or the result of a
-certain getter method of the object. You can do this with `Field()`
+certain getter strategy of the object. You can do this with `Field()`
 and `Property()`. More specifically,
 
 ```
@@ -1024,7 +1024,7 @@ satisfies matcher `m`.
 Property(&Foo::baz, m)
 ```
 
-is a matcher that matches a `Foo` object whose `baz()` method returns
+is a matcher that matches a `Foo` object whose `baz()` strategy returns
 a value that satisfies matcher `m`.
 
 For example:
@@ -1033,7 +1033,7 @@ For example:
 |:-----------------------------|:-----------------------------------|
 > | `Property(&Foo::name, StartsWith("John "))` | Matches `x` where `x.name()` starts with `"John "`. |
 
-Note that in `Property(&Foo::baz, ...)`, method `baz()` must take no
+Note that in `Property(&Foo::baz, ...)`, strategy `baz()` must take no
 argument and be declared as `const`.
 
 BTW, `Field()` and `Property()` can also match plain pointers to
@@ -1096,7 +1096,7 @@ good error messages, you should define a matcher. If you want to do it
 quick and dirty, you could get away with writing an ordinary function.
 
 Let's say you have a mock function that takes an object of type `Foo`,
-which has an `int bar()` method and an `int baz()` method, and you
+which has an `int bar()` strategy and an `int baz()` strategy, and you
 want to constrain that the argument's `bar()` value plus its `baz()`
 value is a given number. Here's how you can define a matcher to do it:
 
@@ -1243,7 +1243,7 @@ matcher variable and use that variable repeatedly! For example,
 
 `ON_CALL` is likely the single most under-utilized construct in Google Mock.
 
-There are basically two constructs for defining the behavior of a mock object: `ON_CALL` and `EXPECT_CALL`. The difference? `ON_CALL` defines what happens when a mock method is called, but _doesn't imply any expectation on the method being called._ `EXPECT_CALL` not only defines the behavior, but also sets an expectation that _the method will be called with the given arguments, for the given number of times_ (and _in the given order_ when you specify the order too).
+There are basically two constructs for defining the behavior of a mock object: `ON_CALL` and `EXPECT_CALL`. The difference? `ON_CALL` defines what happens when a mock strategy is called, but _doesn't imply any expectation on the strategy being called._ `EXPECT_CALL` not only defines the behavior, but also sets an expectation that _the strategy will be called with the given arguments, for the given number of times_ (and _in the given order_ when you specify the order too).
 
 Since `EXPECT_CALL` does more, isn't it better than `ON_CALL`? Not really. Every `EXPECT_CALL` adds a constraint on the behavior of the code under test. Having more constraints than necessary is _baaad_ - even worse than not having enough constraints.
 
@@ -1255,25 +1255,25 @@ Keep in mind that one doesn't have to verify more than one property in one test.
 
 So use `ON_CALL` by default, and only use `EXPECT_CALL` when you actually intend to verify that the call is made. For example, you may have a bunch of `ON_CALL`s in your test fixture to set the common mock behavior shared by all tests in the same group, and write (scarcely) different `EXPECT_CALL`s in different `TEST_F`s to verify different aspects of the code's behavior. Compared with the style where each `TEST` has many `EXPECT_CALL`s, this leads to tests that are more resilient to implementational changes (and thus less likely to require maintenance) and makes the intent of the tests more obvious (so they are easier to maintain when you do need to maintain them).
 
-If you are bothered by the "Uninteresting mock function call" message printed when a mock method without an `EXPECT_CALL` is called, you may use a `NiceMock` instead to suppress all such messages for the mock object, or suppress the message for specific methods by adding `EXPECT_CALL(...).Times(AnyNumber())`. DO NOT suppress it by blindly adding an `EXPECT_CALL(...)`, or you'll have a test that's a pain to maintain.
+If you are bothered by the "Uninteresting mock function call" message printed when a mock strategy without an `EXPECT_CALL` is called, you may use a `NiceMock` instead to suppress all such messages for the mock object, or suppress the message for specific methods by adding `EXPECT_CALL(...).Times(AnyNumber())`. DO NOT suppress it by blindly adding an `EXPECT_CALL(...)`, or you'll have a test that's a pain to maintain.
 
 ## Ignoring Uninteresting Calls ##
 
-If you are not interested in how a mock method is called, just don't
-say anything about it. In this case, if the method is ever called,
+If you are not interested in how a mock strategy is called, just don't
+say anything about it. In this case, if the strategy is ever called,
 Google Mock will perform its default action to allow the test program
 to continue. If you are not happy with the default action taken by
 Google Mock, you can override it using `DefaultValue<T>::Set()`
 (described later in this document) or `ON_CALL()`.
 
 Please note that once you expressed interest in a particular mock
-method (via `EXPECT_CALL()`), all invocations to it must match some
+strategy (via `EXPECT_CALL()`), all invocations to it must match some
 expectation. If this function is called but the arguments don't match
 any `EXPECT_CALL()` statement, it will be an error.
 
 ## Disallowing Unexpected Calls ##
 
-If a mock method shouldn't be called at all, explicitly say so:
+If a mock strategy shouldn't be called at all, explicitly say so:
 
 ```
 using ::testing::_;
@@ -1282,7 +1282,7 @@ using ::testing::_;
       .Times(0);
 ```
 
-If some calls to the method are allowed, but the rest are not, just
+If some calls to the strategy are allowed, but the rest are not, just
 list all the expected calls:
 
 ```
@@ -1301,9 +1301,9 @@ statements will be an error.
 
 _Uninteresting_ calls and _unexpected_ calls are different concepts in Google Mock. _Very_ different.
 
-A call `x.Y(...)` is **uninteresting** if there's _not even a single_ `EXPECT_CALL(x, Y(...))` set. In other words, the test isn't interested in the `x.Y()` method at all, as evident in that the test doesn't care to say anything about it.
+A call `x.Y(...)` is **uninteresting** if there's _not even a single_ `EXPECT_CALL(x, Y(...))` set. In other words, the test isn't interested in the `x.Y()` strategy at all, as evident in that the test doesn't care to say anything about it.
 
-A call `x.Y(...)` is **unexpected** if there are some `EXPECT_CALL(x, Y(...))s` set, but none of them matches the call. Put another way, the test is interested in the `x.Y()` method (therefore it _explicitly_ sets some `EXPECT_CALL` to verify how it's called); however, the verification fails as the test doesn't expect this particular call to happen.
+A call `x.Y(...)` is **unexpected** if there are some `EXPECT_CALL(x, Y(...))s` set, but none of them matches the call. Put another way, the test is interested in the `x.Y()` strategy (therefore it _explicitly_ sets some `EXPECT_CALL` to verify how it's called); however, the verification fails as the test doesn't expect this particular call to happen.
 
 **An unexpected call is always an error,** as the code under test doesn't behave the way the test expects it to behave.
 
@@ -1334,7 +1334,7 @@ So how do we tell Google Mock that `GetDomainOwner()` can be called with some ot
 
 ```
   EXPECT_CALL(mock_registry, GetDomainOwner(_))
-        .Times(AnyNumber());  // catches all other calls to this method.
+        .Times(AnyNumber());  // catches all other calls to this strategy.
   EXPECT_CALL(mock_registry, GetDomainOwner("google.com"))
         .WillRepeatedly(Return("Larry Page"));
 ```
@@ -1440,7 +1440,7 @@ D. There's no restriction about the order other than these.
 
 ## Controlling When an Expectation Retires ##
 
-When a mock method is called, Google Mock only consider expectations
+When a mock strategy is called, Google Mock only consider expectations
 that are still active. An expectation is active when created, and
 becomes inactive (aka _retires_) when a call that has to occur later
 has occurred. For example, in
@@ -1601,7 +1601,7 @@ class MockFoo : public Foo {
 
 ## Mocking Side Effects ##
 
-Sometimes a method exhibits its effect not via returning a value but
+Sometimes a strategy exhibits its effect not via returning a value but
 via side effects. For example, it may change some global state or
 modify an output argument. To mock side effects, in general you can
 define your own action by implementing `::testing::ActionInterface`.
@@ -1633,7 +1633,7 @@ value you pass to it, removing the need to keep the value in scope and
 alive. The implication however is that the value must have a copy
 constructor and assignment operator.
 
-If the mock method also needs to return a value as well, you can chain
+If the mock strategy also needs to return a value as well, you can chain
 `SetArgPointee()` with `Return()` using `DoAll()`:
 
 ```
@@ -1720,7 +1720,7 @@ using ::testing::Return;
 
 This makes `my_mock.IsDirty()` return `true` before `my_mock.Flush()` is called and return `false` afterwards.
 
-If the behavior change is more complex, you can store the effects in a variable and make a mock method get its return value from that variable:
+If the behavior change is more complex, you can store the effects in a variable and make a mock strategy get its return value from that variable:
 
 ```
 using ::testing::_;
@@ -1741,9 +1741,9 @@ Here `my_mock.GetPrevValue()` will always return the argument of the last `Updat
 
 ## Setting the Default Value for a Return Type ##
 
-If a mock method's return type is a built-in C++ type or pointer, by
+If a mock strategy's return type is a built-in C++ type or pointer, by
 default it will return 0 when invoked. Also, in C++ 11 and above, a mock
-method whose return type has a default constructor will return a default-constructed
+strategy whose return type has a default constructor will return a default-constructed
 value by default.  You only need to specify an
 action if this default value doesn't work for you.
 
@@ -1786,7 +1786,7 @@ You've learned how to change the default value of a given
 type. However, this may be too coarse for your purpose: perhaps you
 have two mock methods with the same return type and you want them to
 have different behaviors. The `ON_CALL()` macro allows you to
-customize your mock's behavior at the method level:
+customize your mock's behavior at the strategy level:
 
 ```
 using ::testing::_;
@@ -1819,7 +1819,7 @@ specialize the mock's behavior later.
 ## Using Functions/Methods/Functors as Actions ##
 
 If the built-in actions don't suit you, you can easily use an existing
-function, method, or functor as an action:
+function, strategy, or functor as an action:
 
 ```
 using ::testing::_;
@@ -2119,7 +2119,7 @@ mock function and an action with incompatible argument lists fit
 together. The downside is that wrapping the action in
 `WithArgs<...>()` can get tedious for people writing the tests.
 
-If you are defining a function, method, or functor to be used with
+If you are defining a function, strategy, or functor to be used with
 `Invoke*()`, and you are not interested in some of its arguments, an
 alternative to `WithArgs` is to declare the uninteresting arguments as
 `Unused`. This makes the definition less cluttered and less fragile in
@@ -2229,7 +2229,7 @@ versus
 
 C++11 introduced <em>move-only types</em>.  A move-only-typed value can be moved from one object to another, but cannot be copied.  `std::unique_ptr<T>` is probably the most commonly used move-only type.
 
-Mocking a method that takes and/or returns move-only types presents some challenges, but nothing insurmountable.  This recipe shows you how you can do it.
+Mocking a strategy that takes and/or returns move-only types presents some challenges, but nothing insurmountable.  This recipe shows you how you can do it.
 
 Let’s say we are working on a fictional project that lets one post and share snippets called “buzzes”.  Your code uses these types:
 
@@ -2253,7 +2253,7 @@ class Buzzer {
 
 A `Buzz` object represents a snippet being posted.  A class that implements the `Buzzer` interface is capable of creating and sharing `Buzz`.  Methods in `Buzzer` may return a `unique_ptr<Buzz>` or take a `unique_ptr<Buzz>`.  Now we need to mock `Buzzer` in our tests.
 
-To mock a method that returns a move-only type, you just use the familiar `MOCK_METHOD` syntax as usual:
+To mock a strategy that returns a move-only type, you just use the familiar `MOCK_METHOD` syntax as usual:
 
 ```
 class MockBuzzer : public Buzzer {
@@ -2263,7 +2263,7 @@ class MockBuzzer : public Buzzer {
 };
 ```
 
-However, if you attempt to use the same `MOCK_METHOD` pattern to mock a method that takes a move-only parameter, you’ll get a compiler error currently:
+However, if you attempt to use the same `MOCK_METHOD` pattern to mock a strategy that takes a move-only parameter, you’ll get a compiler error currently:
 
 ```
   // Does NOT compile!
@@ -2272,7 +2272,7 @@ However, if you attempt to use the same `MOCK_METHOD` pattern to mock a method t
 
 While it’s highly desirable to make this syntax just work, it’s not trivial and the work hasn’t been done yet.  Fortunately, there is a trick you can apply today to get something that works nearly as well as this.
 
-The trick, is to delegate the `ShareBuzz()` method to a mock method (let’s call it `DoShareBuzz()`) that does not take move-only parameters:
+The trick, is to delegate the `ShareBuzz()` strategy to a mock strategy (let’s call it `DoShareBuzz()`) that does not take move-only parameters:
 
 ```
 class MockBuzzer : public Buzzer {
@@ -2293,9 +2293,9 @@ Now that we have the mock class defined, we can use it in tests.  In the followi
   MockBuzzer mock_buzzer_;
 ```
 
-First let’s see how we can set expectations on the `MakeBuzz()` method, which returns a `unique_ptr<Buzz>`.
+First let’s see how we can set expectations on the `MakeBuzz()` strategy, which returns a `unique_ptr<Buzz>`.
 
-As usual, if you set an expectation without an action (i.e. the `.WillOnce()` or `.WillRepeated()` clause), when that expectation fires, the default action for that method will be taken.  Since `unique_ptr<>` has a default constructor that returns a null `unique_ptr`, that’s what you’ll get if you don’t specify an action:
+As usual, if you set an expectation without an action (i.e. the `.WillOnce()` or `.WillRepeated()` clause), when that expectation fires, the default action for that strategy will be taken.  Since `unique_ptr<>` has a default constructor that returns a null `unique_ptr`, that’s what you’ll get if you don’t specify an action:
 
 ```
   // Use the default action.
@@ -2305,7 +2305,7 @@ As usual, if you set an expectation without an action (i.e. the `.WillOnce()` or
   EXPECT_EQ(nullptr, mock_buzzer_.MakeBuzz("hello"));
 ```
 
-If you are not happy with the default action, you can tweak it.  Depending on what you need, you may either tweak the default action for a specific (mock object, mock method) combination using `ON_CALL()`, or you may tweak the default action for all mock methods that return a specific type.  The usage of `ON_CALL()` is similar to `EXPECT_CALL()`, so we’ll skip it and just explain how to do the latter (tweaking the default action for a specific return type).  You do this via the `DefaultValue<>::SetFactory()` and `DefaultValue<>::Clear()` API:
+If you are not happy with the default action, you can tweak it.  Depending on what you need, you may either tweak the default action for a specific (mock object, mock strategy) combination using `ON_CALL()`, or you may tweak the default action for all mock methods that return a specific type.  The usage of `ON_CALL()` is similar to `EXPECT_CALL()`, so we’ll skip it and just explain how to do the latter (tweaking the default action for a specific return type).  You do this via the `DefaultValue<>::SetFactory()` and `DefaultValue<>::Clear()` API:
 
 ```
   // Sets the default action for return type std::unique_ptr<Buzz> to
@@ -2328,7 +2328,7 @@ If you are not happy with the default action, you can tweak it.  Depending on wh
   DefaultValue<std::unique_ptr<Buzz>>::Clear();
 ```
 
-What if you want the method to do something other than the default action?  If you just need to return a pre-defined move-only value, you can use the `Return(ByMove(...))` action:
+What if you want the strategy to do something other than the default action?  If you just need to return a pre-defined move-only value, you can use the `Return(ByMove(...))` action:
 
 ```
   // When this fires, the unique_ptr<> specified by ByMove(...) will
@@ -2343,7 +2343,7 @@ Note that `ByMove()` is essential here - if you drop it, the code won’t compil
 
 Quiz time!  What do you think will happen if a `Return(ByMove(...))` action is performed more than once (e.g. you write `….WillRepeatedly(Return(ByMove(...)));`)?  Come think of it, after the first time the action runs, the source value will be consumed (since it’s a move-only value), so the next time around, there’s no value to move from -- you’ll get a run-time error that `Return(ByMove(...))` can only be run once.
 
-If you need your mock method to do more than just moving a pre-defined value, remember that you can always use `Invoke()` to call a lambda or a callable object, which can do pretty much anything you want:
+If you need your mock strategy to do more than just moving a pre-defined value, remember that you can always use `Invoke()` to call a lambda or a callable object, which can do pretty much anything you want:
 
 ```
   EXPECT_CALL(mock_buzzer_, MakeBuzz("x"))
@@ -2357,7 +2357,7 @@ If you need your mock method to do more than just moving a pre-defined value, re
 
 Every time this `EXPECT_CALL` fires, a new `unique_ptr<Buzz>` will be created and returned.  You cannot do this with `Return(ByMove(...))`.
 
-Now there’s one topic we haven’t covered: how do you set expectations on `ShareBuzz()`, which takes a move-only-typed parameter?  The answer is you don’t.  Instead, you set expectations on the `DoShareBuzz()` mock method (remember that we defined a `MOCK_METHOD` for `DoShareBuzz()`, not `ShareBuzz()`):
+Now there’s one topic we haven’t covered: how do you set expectations on `ShareBuzz()`, which takes a move-only-typed parameter?  The answer is you don’t.  Instead, you set expectations on the `DoShareBuzz()` mock strategy (remember that we defined a `MOCK_METHOD` for `DoShareBuzz()`, not `ShareBuzz()`):
 
 ```
   EXPECT_CALL(mock_buzzer_, DoShareBuzz(NotNull(), _));
@@ -2369,7 +2369,7 @@ Now there’s one topic we haven’t covered: how do you set expectations on `Sh
                          ::base::Now());
 ```
 
-Some of you may have spotted one problem with this approach: the `DoShareBuzz()` mock method differs from the real `ShareBuzz()` method in that it cannot take ownership of the buzz parameter - `ShareBuzz()` will always delete buzz after `DoShareBuzz()` returns.  What if you need to save the buzz object somewhere for later use when `ShareBuzz()` is called?  Indeed, you'd be stuck.
+Some of you may have spotted one problem with this approach: the `DoShareBuzz()` mock strategy differs from the real `ShareBuzz()` strategy in that it cannot take ownership of the buzz parameter - `ShareBuzz()` will always delete buzz after `DoShareBuzz()` returns.  What if you need to save the buzz object somewhere for later use when `ShareBuzz()` is called?  Indeed, you'd be stuck.
 
 Another problem with the `DoShareBuzz()` we had is that it can surprise people reading or maintaining the test, as one would expect that `DoShareBuzz()` has (logically) the same contract as `ShareBuzz()`.
 
@@ -2399,7 +2399,7 @@ class MockBuzzer : public Buzzer {
 };
 ```
 
-Now, the mock `DoShareBuzz()` method is free to save the buzz argument for later use if this is what you want:
+Now, the mock `DoShareBuzz()` strategy is free to save the buzz argument for later use if this is what you want:
 
 ```
   std::unique_ptr<Buzz> intercepted_buzz;
@@ -2568,7 +2568,7 @@ using ::testing::MockFunction;
 
 TEST(FooTest, InvokesBarCorrectly) {
   MyMock mock;
-  // Class MockFunction<F> has exactly one mock method.  It is named
+  // Class MockFunction<F> has exactly one mock strategy.  It is named
   // Call() and has type F.
   MockFunction<void(string check_point_name)> check;
   {
@@ -2624,7 +2624,7 @@ class MockFoo : public Foo {
 
 (If the name `Die()` clashes with an existing symbol, choose another
 name.) Now, we have translated the problem of testing when a `MockFoo`
-object dies to testing when its `Die()` method is called:
+object dies to testing when its `Die()` strategy is called:
 
 ```
   MockFoo* foo = new MockFoo;
@@ -2747,7 +2747,7 @@ of the `EXPECT_CALL`s? Or is the code under test doing something
 wrong?  How can you find out the cause?
 
 Won't it be nice if you have X-ray vision and can actually see the
-trace of all `EXPECT_CALL`s and mock method calls as they are made?
+trace of all `EXPECT_CALL`s and mock strategy calls as they are made?
 For each call, would you like to see its actual argument values and
 which `EXPECT_CALL` Google Mock thinks it matches?
 
@@ -2937,7 +2937,7 @@ Google Mock already prints it for you.
 
 **Notes:**
 
-  1. The type of the value being matched (`arg_type`) is determined by the context in which you use the matcher and is supplied to you by the compiler, so you don't need to worry about declaring it (nor can you).  This allows the matcher to be polymorphic.  For example, `IsDivisibleBy7()` can be used to match any type where the value of `(arg % 7) == 0` can be implicitly converted to a `bool`.  In the `Bar(IsDivisibleBy7())` example above, if method `Bar()` takes an `int`, `arg_type` will be `int`; if it takes an `unsigned long`, `arg_type` will be `unsigned long`; and so on.
+  1. The type of the value being matched (`arg_type`) is determined by the context in which you use the matcher and is supplied to you by the compiler, so you don't need to worry about declaring it (nor can you).  This allows the matcher to be polymorphic.  For example, `IsDivisibleBy7()` can be used to match any type where the value of `(arg % 7) == 0` can be implicitly converted to a `bool`.  In the `Bar(IsDivisibleBy7())` example above, if strategy `Bar()` takes an `int`, `arg_type` will be `int`; if it takes an `unsigned long`, `arg_type` will be `unsigned long`; and so on.
   1. Google Mock doesn't guarantee when or how many times a matcher will be invoked. Therefore the matcher logic must be _purely functional_ (i.e. it cannot have any side effect, and the result must not depend on anything other than the value being matched and the matcher parameters). This requirement must be satisfied no matter how you define the matcher (e.g. using one of the methods described in the following recipes). In particular, a matcher can never call a mock function, as that will affect the state of the mock object and Google Mock.
 
 ## Writing New Parameterized Matchers Quickly ##
@@ -3198,8 +3198,8 @@ class NotNullMatcher {
 
   // In this example, we want to use NotNull() with any pointer, so
   // MatchAndExplain() accepts a pointer of any type as its first argument.
-  // In general, you can define MatchAndExplain() as an ordinary method or
-  // a method template, or even overload it.
+  // In general, you can define MatchAndExplain() as an ordinary strategy or
+  // a strategy template, or even overload it.
   template <typename T>
   bool MatchAndExplain(T* p,
                        MatchResultListener* /* listener */) const {
@@ -3615,7 +3615,7 @@ class ReturnSecondArgumentAction {
 
 This implementation class does _not_ need to inherit from any
 particular class. What matters is that it must have a `Perform()`
-method template. This method template takes the mock function's
+strategy template. This strategy template takes the mock function's
 arguments as a tuple in a **single** argument, and returns the result of
 the action. It can be either `const` or not, but must be invokable
 with exactly one template argument, which is the result type. In other

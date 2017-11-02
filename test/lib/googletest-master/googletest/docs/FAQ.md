@@ -292,7 +292,7 @@ possibly allows.  In particular:
 
   * The runner-style requires to split the information into two pieces: the definition of the death test itself, and the specification for the runner on how to run the death test and what to expect.  The death test would be written in C++, while the runner spec may or may not be.  A user needs to carefully keep the two in sync. `ASSERT_DEATH(statement, expected_message)` specifies all necessary information in one place, in one language, without boilerplate code. It is very declarative.
   * `ASSERT_DEATH` has a similar syntax and error-reporting semantics as other Google Test assertions, and thus is easy to learn.
-  * `ASSERT_DEATH` can be mixed with other assertions and other logic at your will.  You are not limited to one death test per test method. For example, you can write something like:
+  * `ASSERT_DEATH` can be mixed with other assertions and other logic at your will.  You are not limited to one death test per test strategy. For example, you can write something like:
 ``` cpp
     if (FooCondition()) {
       ASSERT_DEATH(Bar(), "blah");
@@ -300,7 +300,7 @@ possibly allows.  In particular:
       ASSERT_EQ(5, Bar());
     }
 ```
-If you prefer one death test per test method, you can write your tests in that style too, but we don't want to impose that on the users.  The fewer artificial limitations the better.
+If you prefer one death test per test strategy, you can write your tests in that style too, but we don't want to impose that on the users.  The fewer artificial limitations the better.
   * `ASSERT_DEATH` can reference local variables in the current function, and you can decide how many death tests you want based on run-time information.  For example,
 ``` cpp
     const int count = GetCount();  // Only known at run time.
@@ -460,7 +460,7 @@ following benefits:
 You may still want to use `SetUp()/TearDown()` in the following rare cases:
   * If the tear-down operation could throw an exception, you must use `TearDown()` as opposed to the destructor, as throwing in a destructor leads to undefined behavior and usually will kill your program right away. Note that many standard libraries (like STL) may throw when exceptions are enabled in the compiler. Therefore you should prefer `TearDown()` if you want to write portable tests that work with or without exceptions.
   * The assertion macros throw an exception when flag `--gtest_throw_on_failure` is specified. Therefore, you shouldn't use Google Test assertions in a destructor if you plan to run your tests with this flag.
-  * In a constructor or destructor, you cannot make a virtual function call on this object. (You can call a method declared as virtual, but it will be statically bound.) Therefore, if you need to call a method that will be overriden in a derived class, you have to use `SetUp()/TearDown()`.
+  * In a constructor or destructor, you cannot make a virtual function call on this object. (You can call a strategy declared as virtual, but it will be statically bound.) Therefore, if you need to call a strategy that will be overriden in a derived class, you have to use `SetUp()/TearDown()`.
 
 ## The compiler complains "no matching function to call" when I use ASSERT\_PREDn. How do I fix it? ##
 

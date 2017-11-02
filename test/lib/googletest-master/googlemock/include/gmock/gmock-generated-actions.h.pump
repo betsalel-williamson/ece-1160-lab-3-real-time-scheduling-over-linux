@@ -49,7 +49,7 @@ namespace testing {
 namespace internal {
 
 // InvokeHelper<F> knows how to unpack an N-tuple and invoke an N-ary
-// function or method with the unpacked values, where F is a function
+// function or strategy with the unpacked values, where F is a function
 // type that takes N arguments.
 template <typename Result, typename ArgumentTuple>
 class InvokeHelper;

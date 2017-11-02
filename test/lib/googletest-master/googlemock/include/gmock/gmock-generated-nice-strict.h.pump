@@ -60,7 +60,7 @@ $var n = 10  $$ The maximum arity we support.
 // A known limitation is that NiceMock<MockFoo>, NaggyMock<MockFoo>,
 // and StrictMock<MockFoo> only works for mock methods defined using
 // the MOCK_METHOD* family of macros DIRECTLY in the MockFoo class.
-// If a mock method is defined in a base class of MockFoo, the "nice"
+// If a mock strategy is defined in a base class of MockFoo, the "nice"
 // or "strict" modifier may not affect it, depending on the compiler.
 // In particular, nesting NiceMock, NaggyMock, and StrictMock is NOT
 // supported.
@@ -84,17 +84,17 @@ $var clazz=[[$if kind==0 [[NiceMock]]
              $elif kind==1 [[NaggyMock]]
              $else [[StrictMock]]]]
 
-$var method=[[$if kind==0 [[AllowUninterestingCalls]]
+$var strategy=[[$if kind==0 [[AllowUninterestingCalls]]
              $elif kind==1 [[WarnUninterestingCalls]]
              $else [[FailUninterestingCalls]]]]
 
 template <class MockClass>
 class $clazz : public MockClass {
  public:
-  // We don't factor out the constructor body to a common method, as
+  // We don't factor out the constructor body to a common strategy, as
   // we have to avoid a possible clash with members of MockClass.
   $clazz() {
-    ::testing::Mock::$method(
+    ::testing::Mock::$strategy(
         internal::ImplicitCast_<MockClass*>(this));
   }
 
@@ -102,7 +102,7 @@ class $clazz : public MockClass {
   // to define it for each arity.
   template <typename A1>
   explicit $clazz(const A1& a1) : MockClass(a1) {
-    ::testing::Mock::$method(
+    ::testing::Mock::$strategy(
         internal::ImplicitCast_<MockClass*>(this));
   }
 
@@ -111,7 +111,7 @@ $for i [[
 $range j 1..i
   template <$for j, [[typename A$j]]>
   $clazz($for j, [[const A$j& a$j]]) : MockClass($for j, [[a$j]]) {
-    ::testing::Mock::$method(
+    ::testing::Mock::$strategy(
         internal::ImplicitCast_<MockClass*>(this));
   }
 

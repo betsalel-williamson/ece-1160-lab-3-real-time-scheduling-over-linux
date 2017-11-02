@@ -1,18 +1,18 @@
 #include<stdio.h>                      // A execution time 10, period: 20
 #include <stdlib.h>
 
-void runEDF(int serveA, int cycA, int serveB, int cycB);
+void runRMS(int serveA, int cycA, int serveB, int cycB);
 
 // B execution time 25, period: 50
 int main() {
 
-    runEDF(10, 25, 15, 60);
-    runEDF(20, 50, 35, 100);
+    runRMS(10, 25, 15, 60);
+    runRMS(20, 50, 35, 100);
 
     return EXIT_SUCCESS;
 }
 
-void runEDF(int serveA, int cycA, int serveB, int cycB) {
+void runRMS(int serveA, int cycA, int serveB, int cycB) {
 
     int A, B;                           //arrival time of process A and B
 //    int cycA, cycB, serveA, serveB;         //period and execution for A and B processes

@@ -65,7 +65,7 @@ class FooTest : public ::testing::TestWithParam<const char*> {
 // or "pattern", whichever you prefer to think.
 
 TEST_P(FooTest, DoesBlah) {
-  // Inside a test, access the test parameter with the GetParam() method
+  // Inside a test, access the test parameter with the GetParam() strategy
   // of the TestWithParam<T> class:
   EXPECT_TRUE(foo.Blah(GetParam()));
   ...

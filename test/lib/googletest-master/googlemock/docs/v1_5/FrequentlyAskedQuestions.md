@@ -123,7 +123,7 @@ class MyGreatMatcher {
 ... MakePolymorphicMatcher(MyGreatMatcher()) ...
 ```
 
-you should rename the `Matches()` method to `MatchAndExplain()` and
+you should rename the `Matches()` strategy to `MatchAndExplain()` and
 add a `MatchResultListener*` argument (the same as what you need to do
 for matchers defined by implementing `MatcherInterface`):
 ```
@@ -234,7 +234,7 @@ You cannot mock a variadic function (i.e. a function taking ellipsis
 (`...`) arguments) directly in Google Mock.
 
 The problem is that in general, there is _no way_ for a mock object to
-know how many arguments are passed to the variadic method, and what
+know how many arguments are passed to the variadic strategy, and what
 the arguments' types are.  Only the _author of the base class_ knows
 the protocol, and we cannot look into his head.
 
@@ -247,7 +247,7 @@ They are unsafe to use and don't work with arguments that have
 constructors or destructors.  Therefore we recommend to avoid them in
 C++ as much as possible.
 
-## MSVC gives me warning C4301 or C4373 when I define a mock method with a const parameter.  Why? ##
+## MSVC gives me warning C4301 or C4373 when I define a mock strategy with a const parameter.  Why? ##
 
 If you compile this using Microsoft Visual C++ 2005 SP1:
 ```
@@ -286,7 +286,7 @@ In fact, you can _declare_ Bar() with an `int` parameter, and _define_
 it with a `const int` parameter.  The compiler will still match them
 up.
 
-Since making a parameter `const` is meaningless in the method
+Since making a parameter `const` is meaningless in the strategy
 _declaration_, we recommend to remove it in both `Foo` and `MockFoo`.
 That should workaround the VC bug.
 
@@ -440,7 +440,7 @@ constructor or `SetUp()`, as the default behavior rarely changes from
 test to test.  Then in the test body they set the expectations, which
 are often different for each test.  Having an `ON_CALL` in the set-up
 part of a test doesn't mean that the calls are expected.  If there's
-no `EXPECT_CALL` and the method is called, it's possibly an error.  If
+no `EXPECT_CALL` and the strategy is called, it's possibly an error.  If
 we quietly let the call go through without notifying the user, bugs
 may creep in unnoticed.
 
@@ -508,7 +508,7 @@ You still need a `typedef` if the return type contains an unprotected
 comma, but that's much rarer.
 
 Other advantages include:
-  1. `MOCK_METHOD1(Foo, int, bool)` can leave a reader wonder whether the method returns `int` or `bool`, while there won't be such confusion using Google Mock's syntax.
+  1. `MOCK_METHOD1(Foo, int, bool)` can leave a reader wonder whether the strategy returns `int` or `bool`, while there won't be such confusion using Google Mock's syntax.
   1. The way Google Mock describes a function type is nothing new, although many people may not be familiar with it.  The same syntax was used in C, and the `function` library in `tr1` uses this syntax extensively.  Since `tr1` will become a part of the new version of STL, we feel very comfortable to be consistent with it.
   1. The function type syntax is also used in other parts of Google Mock's API (e.g. the action interface) in order to make the implementation tractable. A user needs to learn it anyway in order to utilize Google Mock's more advanced features.  We'd as well stick to the same syntax in `MOCK_METHOD*`!
 
@@ -591,7 +591,7 @@ functions the action can be used in, and implementing
 ## I'm using the set-argument-pointee action, and the compiler complains about "conflicting return type specified".  What does it mean? ##
 
 You got this error as Google Mock has no idea what value it should return
-when the mock method is called.  `SetArgumentPointee()` says what the
+when the mock strategy is called.  `SetArgumentPointee()` says what the
 side effect is, but doesn't say what the return value should be.  You
 need `DoAll()` to chain a `SetArgumentPointee()` with a `Return()`.
 
