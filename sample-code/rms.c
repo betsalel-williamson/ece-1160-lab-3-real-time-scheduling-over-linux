@@ -1,52 +1,39 @@
 #include<stdio.h>                      // A execution time 10, period: 20
 #include <stdlib.h>
 
-#ifndef DEBUG
-#define DEBUG
-#endif
-
-#define TEST1
-
-#ifdef DEBUG
-
-#ifdef TEST1
-#define EXECUTION_P1     10
-#define INPUT_PERIOD_P1  25
-#define EXECUTION_P2     15
-#define INPUT_PERIOD_P2  60
-#endif
-
-#ifdef TEST2
-#define EXECUTION_P1     20
-#define INPUT_PERIOD_P1  50
-#define EXECUTION_P2     35
-#define INPUT_PERIOD_P2  100
-#endif
-
-#endif
+void runRMS(int serveA, int cycA, int serveB, int cycB);
 
 // B execution time 25, period: 50
 int main() {
+
+    runRMS(10, 25, 15, 60);
+    runRMS(20, 50, 35, 100);
+
+    return EXIT_SUCCESS;
+}
+
+void runRMS(int serveA, int cycA, int serveB, int cycB) {
+
     int A, B;                           //arrival time of process A and B
-    int cycA, cycB, serveA, serveB;         //period and execution for A and B processes
+//    int cycA, cycB, serveA, serveB;         //period and execution for A and B processes
     float m;
     int i, j, a = 0, b = 0, ka = 0, kb = 0;                 /*ka,kb is a switch and
  											i, j, a, b, to record status of each process*/
     int numa = 0, numb = 0;                         //accumulated execution time
     int T;
     printf("\t\t\t------------------------------------------------\n");
-    printf("\t\t\trate monotonic schedule algorithm\n");
+    printf("\t\t\t\trate monotonic schedule algorithm\n");
     printf("\t\t\t------------------------------------------------\n");
 //    printf("please input period and execution for A process\n");
 //    scanf("%d%d", &cycA, &serveA);
 //    printf("please input period and execution for B process\n");
 //    scanf("%d%d", &cycB, &serveB);
 
-    cycA = INPUT_PERIOD_P1;
-    serveA = EXECUTION_P1;
-
-    cycB = INPUT_PERIOD_P2;
-    serveB = EXECUTION_P2;
+//    cycA = INPUT_PERIOD_P1;
+//    serveA = EXECUTION_P1;
+//
+//    cycB = INPUT_PERIOD_P2;
+//    serveB = EXECUTION_P2;
 
     m = (float) serveA / cycA + (float) serveB / cycB;
 
@@ -166,6 +153,4 @@ int main() {
             numb++;
         }
     }
-
-    return EXIT_SUCCESS;
 }
