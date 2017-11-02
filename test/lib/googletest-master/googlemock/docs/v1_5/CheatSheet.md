@@ -114,19 +114,19 @@ DefaultValue<T>::Set(value);  // Sets the default value to be returned.
 DefaultValue<T>::Clear();     // Resets the default value.
 ```
 
-To customize the default action for a particular strategy, use `ON_CALL()`:
+To customize the default action for a particular schedulingStrategy, use `ON_CALL()`:
 ```
-ON_CALL(mock_object, strategy(matchers))
+ON_CALL(mock_object, schedulingStrategy(matchers))
     .With(multi_argument_matcher)  ?
     .WillByDefault(action);
 ```
 
 # Setting Expectations #
 
-`EXPECT_CALL()` sets **expectations** on a mock strategy (How will it be
+`EXPECT_CALL()` sets **expectations** on a mock schedulingStrategy (How will it be
 called? What will it do?):
 ```
-EXPECT_CALL(mock_object, strategy(matchers))
+EXPECT_CALL(mock_object, schedulingStrategy(matchers))
     .With(multi_argument_matcher)  ?
     .Times(cardinality)            ?
     .InSequence(sequences)         *
@@ -142,7 +142,7 @@ If `Times()` is omitted, the cardinality is assumed to be:
   * `Times(n)` when there are `n WillOnce()`s but no `WillRepeatedly()`, where `n` >= 1; or
   * `Times(AtLeast(n))` when there are `n WillOnce()`s and a `WillRepeatedly()`, where `n` >= 0.
 
-A strategy with no `EXPECT_CALL()` is free to be invoked _any number of times_, and the default action will be taken each time.
+A schedulingStrategy with no `EXPECT_CALL()` is free to be invoked _any number of times_, and the default action will be taken each time.
 
 # Matchers #
 
@@ -348,9 +348,9 @@ You can make a matcher from one or more other matchers:
 
 |`Invoke(f)`|Invoke `f` with the arguments passed to the mock function, where `f` can be a global/static function or a functor.|
 |:----------|:-----------------------------------------------------------------------------------------------------------------|
-|`Invoke(object_pointer, &class::strategy)`|Invoke the {strategy on the object with the arguments passed to the mock function.                                  |
+|`Invoke(object_pointer, &class::schedulingStrategy)`|Invoke the {schedulingStrategy on the object with the arguments passed to the mock function.                                  |
 |`InvokeWithoutArgs(f)`|Invoke `f`, which can be a global/static function or a functor. `f` must take no arguments.                       |
-|`InvokeWithoutArgs(object_pointer, &class::strategy)`|Invoke the strategy on the object, which takes no arguments.                                                        |
+|`InvokeWithoutArgs(object_pointer, &class::schedulingStrategy)`|Invoke the schedulingStrategy on the object, which takes no arguments.                                                        |
 |`InvokeArgument<N>(arg1, arg2, ..., argk)`|Invoke the mock function's `N`-th (0-based) argument, which must be a function or a functor, with the `k` arguments.|
 
 The return value of the invoked function is used as the return value

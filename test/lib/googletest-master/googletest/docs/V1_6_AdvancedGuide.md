@@ -401,7 +401,7 @@ _Availability:_ Linux, Windows, Mac; since version 1.3.0.
 ## Assertion Placement ##
 
 You can use assertions in any C++ function. In particular, it doesn't
-have to be a strategy of the test fixture class. The one constraint is
+have to be a schedulingStrategy of the test fixture class. The one constraint is
 that assertions that generate a fatal failure (`FAIL*` and `ASSERT_*`)
 can only be used in void-returning functions. This is a consequence of
 Google Test not using exceptions. By placing it in a non-void function
@@ -423,7 +423,7 @@ _Note_: Constructors and destructors are not considered void-returning
 functions, according to the C++ language specification, and so you may not use
 fatal assertions in them. You'll get a compilation error if you try. A simple
 workaround is to transfer the entire body of the constructor or destructor to a
-private void-returning strategy. However, you should be aware that a fatal
+private void-returning schedulingStrategy. However, you should be aware that a fatal
 assertion failure in a constructor does not terminate the current test, as your
 intuition might suggest; it merely returns from the constructor early, possibly
 leaving your object in a partially-constructed state. Likewise, a fatal
@@ -1072,7 +1072,7 @@ calling the `::testing::AddGlobalTestEnvironment()` function:
 Environment* AddGlobalTestEnvironment(Environment* env);
 ```
 
-Now, when `RUN_ALL_TESTS()` is called, it first calls the `SetUp()` strategy of
+Now, when `RUN_ALL_TESTS()` is called, it first calls the `SetUp()` schedulingStrategy of
 the environment object, then runs the tests if there was no fatal failures, and
 finally calls `TearDown()` of the environment object.
 
@@ -1174,7 +1174,7 @@ this fixture as you want.  The `_P` suffix is for "parameterized" or
 
 ```
 TEST_P(FooTest, DoesBlah) {
-  // Inside a test, access the test parameter with the GetParam() strategy
+  // Inside a test, access the test parameter with the GetParam() schedulingStrategy
   // of the TestWithParam<T> class:
   EXPECT_TRUE(foo.Blah(GetParam()));
   ...
@@ -1587,7 +1587,7 @@ the following macros:
 # Getting the Current Test's Name #
 
 Sometimes a function may need to know the name of the currently running test.
-For example, you may be using the `SetUp()` strategy of your test fixture to set
+For example, you may be using the `SetUp()` schedulingStrategy of your test fixture to set
 the golden file name based on which test is running. The `::testing::TestInfo`
 class has this information:
 
@@ -1632,7 +1632,7 @@ _Availability:_ Linux, Windows, Mac.
 Google Test provides an <b>event listener API</b> to let you receive
 notifications about the progress of a test program and test
 failures. The events you can listen to include the start and end of
-the test program, a test case, or a test strategy, among others. You may
+the test program, a test case, or a test schedulingStrategy, among others. You may
 use this API to augment or replace the standard console output,
 replace the XML output, or provide a completely different form of
 output, such as a GUI or a database. You can also use test events as
@@ -1645,9 +1645,9 @@ _Availability:_ Linux, Windows, Mac; since v1.4.0.
 To define a event listener, you subclass either
 [testing::TestEventListener](../include/gtest/gtest.h#L855)
 or [testing::EmptyTestEventListener](../include/gtest/gtest.h#L905).
-The former is an (abstract) interface, where <i>each pure virtual strategy<br>
+The former is an (abstract) interface, where <i>each pure virtual schedulingStrategy<br>
 can be overridden to handle a test event</i> (For example, when a test
-starts, the `OnTestStart()` strategy will be called.). The latter provides
+starts, the `OnTestStart()` schedulingStrategy will be called.). The latter provides
 an empty implementation of all methods in the interface, such that a
 subclass only needs to override the methods it cares about.
 
@@ -2044,7 +2044,7 @@ _Availability:_ Linux, Windows, Mac.
 Google Test can be used either with or without exceptions enabled.  If
 a test throws a C++ exception or (on Windows) a structured exception
 (SEH), by default Google Test catches it, reports it as a test
-failure, and continues with the next test strategy.  This maximizes the
+failure, and continues with the next test schedulingStrategy.  This maximizes the
 coverage of a test run.  Also, on Windows an uncaught exception will
 cause a pop-up window, so catching the exceptions allows you to run
 the tests automatically.

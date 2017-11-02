@@ -14,8 +14,8 @@ in your own code.
 
 ## Mocking Private or Protected Methods ##
 
-You must always put a mock strategy definition (`MOCK_METHOD*`) in a
-`public:` section of the mock class, regardless of the strategy being
+You must always put a mock schedulingStrategy definition (`MOCK_METHOD*`) in a
+`public:` section of the mock class, regardless of the schedulingStrategy being
 mocked being `public`, `protected`, or `private` in the base class.
 This allows `ON_CALL` and `EXPECT_CALL` to reference the mock function
 from outside of the mock class.  (Yes, C++ allows a subclass to change
@@ -76,7 +76,7 @@ class MockFoo : public Foo {
 };
 ```
 
-**Note:** if you don't mock all versions of the overloaded strategy, the
+**Note:** if you don't mock all versions of the overloaded schedulingStrategy, the
 compiler will give you a warning about some methods in the base class
 being hidden. To fix that, use `using` to bring them in scope:
 
@@ -186,7 +186,7 @@ Then you can use `CreateConnection<ConcretePacketStream>()` and
 ## Mocking Free Functions ##
 
 It's possible to use Google Mock to mock a free function (i.e. a
-C-style function or a static strategy).  You just need to rewrite your
+C-style function or a static schedulingStrategy).  You just need to rewrite your
 code to use an interface (abstract class).
 
 Instead of calling a free function (say, `OpenFile`) directly,
@@ -222,10 +222,10 @@ combine this with the recipe for [mocking non-virtual methods](#Mocking_Nonvirtu
 
 ## Nice Mocks and Strict Mocks ##
 
-If a mock strategy has no `EXPECT_CALL` spec but is called, Google Mock
+If a mock schedulingStrategy has no `EXPECT_CALL` spec but is called, Google Mock
 will print a warning about the "uninteresting call". The rationale is:
 
-  * New methods may be added to an interface after a test is written. We shouldn't fail a test just because a strategy it doesn't know about is called.
+  * New methods may be added to an interface after a test is written. We shouldn't fail a test just because a schedulingStrategy it doesn't know about is called.
   * However, this may also mean there's a bug in the test, so Google Mock shouldn't be silent either. If the user believes these calls are harmless, he can add an `EXPECT_CALL()` to suppress the warning.
 
 However, sometimes you may want to suppress all "uninteresting call"
@@ -243,7 +243,7 @@ TEST(...) {
 }
 ```
 
-If a strategy of `mock_foo` other than `DoThis()` is called, it will be
+If a schedulingStrategy of `mock_foo` other than `DoThis()` is called, it will be
 reported by Google Mock as a warning. However, if you rewrite your
 test to use `NiceMock<MockFoo>` instead, the warning will be gone,
 resulting in a cleaner test output:
@@ -285,7 +285,7 @@ TEST(...) {
   EXPECT_CALL(mock_foo, DoThis());
   ... code that uses mock_foo ...
 
-  // The test will fail if a strategy of mock_foo other than DoThis()
+  // The test will fail if a schedulingStrategy of mock_foo other than DoThis()
   // is called.
 }
 ```
@@ -293,9 +293,9 @@ TEST(...) {
 There are some caveats though (I don't like them just as much as the
 next guy, but sadly they are side effects of C++'s limitations):
 
-  1. `NiceMock<MockFoo>` and `StrictMock<MockFoo>` only work for mock methods defined using the `MOCK_METHOD*` family of macros **directly** in the `MockFoo` class. If a mock strategy is defined in a **base class** of `MockFoo`, the "nice" or "strict" modifier may not affect it, depending on the compiler. In particular, nesting `NiceMock` and `StrictMock` (e.g. `NiceMock<StrictMock<MockFoo> >`) is **not** supported.
+  1. `NiceMock<MockFoo>` and `StrictMock<MockFoo>` only work for mock methods defined using the `MOCK_METHOD*` family of macros **directly** in the `MockFoo` class. If a mock schedulingStrategy is defined in a **base class** of `MockFoo`, the "nice" or "strict" modifier may not affect it, depending on the compiler. In particular, nesting `NiceMock` and `StrictMock` (e.g. `NiceMock<StrictMock<MockFoo> >`) is **not** supported.
   1. The constructors of the base mock (`MockFoo`) cannot have arguments passed by non-const reference, which happens to be banned by the [Google C++ style guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml).
-  1. During the constructor or destructor of `MockFoo`, the mock object is _not_ nice or strict.  This may cause surprises if the constructor or destructor calls a mock strategy on `this` object. (This behavior, however, is consistent with C++'s general rule: if a constructor or destructor calls a virtual strategy of `this` object, that strategy is treated as non-virtual.  In other words, to the base class's constructor or destructor, `this` object behaves like an instance of the base class, not the derived class.  This rule is required for safety.  Otherwise a base constructor may use members of a derived class before they are initialized, or a base destructor may use members of a derived class after they have been destroyed.)
+  1. During the constructor or destructor of `MockFoo`, the mock object is _not_ nice or strict.  This may cause surprises if the constructor or destructor calls a mock schedulingStrategy on `this` object. (This behavior, however, is consistent with C++'s general rule: if a constructor or destructor calls a virtual schedulingStrategy of `this` object, that schedulingStrategy is treated as non-virtual.  In other words, to the base class's constructor or destructor, `this` object behaves like an instance of the base class, not the derived class.  This rule is required for safety.  Otherwise a base constructor may use members of a derived class before they are initialized, or a base destructor may use members of a derived class after they have been destroyed.)
 
 Finally, you should be **very cautious** when using this feature, as the
 decision you make applies to **all** future changes to the mock
@@ -308,7 +308,7 @@ explicit `EXPECT_CALL` first, and only turn to `NiceMock` or
 
 ## Simplifying the Interface without Breaking Existing Code ##
 
-Sometimes a strategy has a long list of arguments that is mostly
+Sometimes a schedulingStrategy has a long list of arguments that is mostly
 uninteresting. For example,
 
 ```
@@ -322,13 +322,13 @@ class LogSink {
 };
 ```
 
-This strategy's argument list is lengthy and hard to work with (let's
+This schedulingStrategy's argument list is lengthy and hard to work with (let's
 say that the `message` argument is not even 0-terminated). If we mock
 it as is, using the mock will be awkward. If, however, we try to
 simplify this interface, we'll need to fix all clients depending on
 it, which is often infeasible.
 
-The trick is to re-dispatch the strategy in the mock class:
+The trick is to re-dispatch the schedulingStrategy in the mock class:
 
 ```
 class ScopedMockLog : public LogSink {
@@ -342,7 +342,7 @@ class ScopedMockLog : public LogSink {
     Log(severity, full_filename, std::string(message, message_len));
   }
 
-  // Implements the mock strategy:
+  // Implements the mock schedulingStrategy:
   //
   //   void Log(LogSeverity severity,
   //            const string& file_path,
@@ -352,7 +352,7 @@ class ScopedMockLog : public LogSink {
 };
 ```
 
-By defining a new mock strategy with a trimmed argument list, we make
+By defining a new mock schedulingStrategy with a trimmed argument list, we make
 the mock class much more user-friendly.
 
 ## Alternative to Mocking Concrete Classes ##
@@ -445,7 +445,7 @@ using ::testing::Invoke;
 
 class MockFoo : public Foo {
  public:
-  // Normal mock strategy definitions using Google Mock.
+  // Normal mock schedulingStrategy definitions using Google Mock.
   MOCK_METHOD1(DoThis, char(int n));
   MOCK_METHOD2(DoThat, void(const char* s, int* p));
 
@@ -562,7 +562,7 @@ of both worlds.
 ## Delegating Calls to a Parent Class ##
 
 Ideally, you should code to interfaces, whose methods are all pure
-virtual. In reality, sometimes you do need to mock a virtual strategy
+virtual. In reality, sometimes you do need to mock a virtual schedulingStrategy
 that is not pure (i.e, it already has an implementation). For example:
 
 ```
@@ -576,9 +576,9 @@ class Foo {
 
 class MockFoo : public Foo {
  public:
-  // Mocking a pure strategy.
+  // Mocking a pure schedulingStrategy.
   MOCK_METHOD1(Pure, void(int n));
-  // Mocking a concrete strategy.  Foo::Concrete() is shadowed.
+  // Mocking a concrete schedulingStrategy.  Foo::Concrete() is shadowed.
   MOCK_METHOD1(Concrete, int(const char* str));
 };
 ```
@@ -595,9 +595,9 @@ real methods in the base class:
 ```
 class MockFoo : public Foo {
  public:
-  // Mocking a pure strategy.
+  // Mocking a pure schedulingStrategy.
   MOCK_METHOD1(Pure, void(int n));
-  // Mocking a concrete strategy.  Foo::Concrete() is shadowed.
+  // Mocking a concrete schedulingStrategy.  Foo::Concrete() is shadowed.
   MOCK_METHOD1(Concrete, int(const char* str));
 
   // Use this to call Concrete() defined in Foo.
@@ -633,7 +633,7 @@ works.)
 
 ## Matching Argument Values Exactly ##
 
-You can specify exactly which arguments a mock strategy is expecting:
+You can specify exactly which arguments a mock schedulingStrategy is expecting:
 
 ```
 using ::testing::Return;
@@ -804,9 +804,9 @@ TEST(PrinterTest, Print) {
 
 ## Performing Different Actions Based on the Arguments ##
 
-When a mock strategy is called, the _last_ matching expectation that's
+When a mock schedulingStrategy is called, the _last_ matching expectation that's
 still active will be selected (think "newer overrides older"). So, you
-can make a strategy do different things depending on its argument values
+can make a schedulingStrategy do different things depending on its argument values
 like this:
 
 ```
@@ -1013,7 +1013,7 @@ Often a mock function takes a reference to object as an argument. When
 matching the argument, you may not want to compare the entire object
 against a fixed object, as that may be over-specification. Instead,
 you may need to validate a certain member variable or the result of a
-certain getter strategy of the object. You can do this with `Field()`
+certain getter schedulingStrategy of the object. You can do this with `Field()`
 and `Property()`. More specifically,
 
 ```
@@ -1027,7 +1027,7 @@ satisfies matcher `m`.
 Property(&Foo::baz, m)
 ```
 
-is a matcher that matches a `Foo` object whose `baz()` strategy returns
+is a matcher that matches a `Foo` object whose `baz()` schedulingStrategy returns
 a value that satisfies matcher `m`.
 
 For example:
@@ -1036,7 +1036,7 @@ For example:
 |:-----------------------------|:-----------------------------------|
 > | `Property(&Foo::name, StartsWith("John "))` | Matches `x` where `x.name()` starts with `"John "`. |
 
-Note that in `Property(&Foo::baz, ...)`, strategy `baz()` must take no
+Note that in `Property(&Foo::baz, ...)`, schedulingStrategy `baz()` must take no
 argument and be declared as `const`.
 
 BTW, `Field()` and `Property()` can also match plain pointers to
@@ -1099,7 +1099,7 @@ good error messages, you should define a matcher. If you want to do it
 quick and dirty, you could get away with writing an ordinary function.
 
 Let's say you have a mock function that takes an object of type `Foo`,
-which has an `int bar()` strategy and an `int baz()` strategy, and you
+which has an `int bar()` schedulingStrategy and an `int baz()` schedulingStrategy, and you
 want to constrain that the argument's `bar()` value plus its `baz()`
 value is a given number. Here's how you can define a matcher to do it:
 
@@ -1225,21 +1225,21 @@ matcher variable and use that variable repeatedly! For example,
 
 ## Ignoring Uninteresting Calls ##
 
-If you are not interested in how a mock strategy is called, just don't
-say anything about it. In this case, if the strategy is ever called,
+If you are not interested in how a mock schedulingStrategy is called, just don't
+say anything about it. In this case, if the schedulingStrategy is ever called,
 Google Mock will perform its default action to allow the test program
 to continue. If you are not happy with the default action taken by
 Google Mock, you can override it using `DefaultValue<T>::Set()`
 (described later in this document) or `ON_CALL()`.
 
 Please note that once you expressed interest in a particular mock
-strategy (via `EXPECT_CALL()`), all invocations to it must match some
+schedulingStrategy (via `EXPECT_CALL()`), all invocations to it must match some
 expectation. If this function is called but the arguments don't match
 any `EXPECT_CALL()` statement, it will be an error.
 
 ## Disallowing Unexpected Calls ##
 
-If a mock strategy shouldn't be called at all, explicitly say so:
+If a mock schedulingStrategy shouldn't be called at all, explicitly say so:
 
 ```
 using ::testing::_;
@@ -1248,7 +1248,7 @@ using ::testing::_;
       .Times(0);
 ```
 
-If some calls to the strategy are allowed, but the rest are not, just
+If some calls to the schedulingStrategy are allowed, but the rest are not, just
 list all the expected calls:
 
 ```
@@ -1358,7 +1358,7 @@ D. There's no restriction about the order other than these.
 
 ## Controlling When an Expectation Retires ##
 
-When a mock strategy is called, Google Mock only consider expectations
+When a mock schedulingStrategy is called, Google Mock only consider expectations
 that are still active. An expectation is active when created, and
 becomes inactive (aka _retires_) when a call that has to occur later
 has occurred. For example, in
@@ -1456,7 +1456,7 @@ class MockFoo : public Foo {
 
 ## Mocking Side Effects ##
 
-Sometimes a strategy exhibits its effect not via returning a value but
+Sometimes a schedulingStrategy exhibits its effect not via returning a value but
 via side effects. For example, it may change some global state or
 modify an output argument. To mock side effects, in general you can
 define your own action by implementing `::testing::ActionInterface`.
@@ -1488,7 +1488,7 @@ value you pass to it, removing the need to keep the value in scope and
 alive. The implication however is that the value must have a copy
 constructor and assignment operator.
 
-If the mock strategy also needs to return a value as well, you can chain
+If the mock schedulingStrategy also needs to return a value as well, you can chain
 `SetArgumentPointee()` with `Return()` using `DoAll()`:
 
 ```
@@ -1575,7 +1575,7 @@ using ::testing::Return;
 
 This makes `my_mock.IsDirty()` return `true` before `my_mock.Flush()` is called and return `false` afterwards.
 
-If the behavior change is more complex, you can store the effects in a variable and make a mock strategy get its return value from that variable:
+If the behavior change is more complex, you can store the effects in a variable and make a mock schedulingStrategy get its return value from that variable:
 
 ```
 using ::testing::_;
@@ -1596,7 +1596,7 @@ Here `my_mock.GetPrevValue()` will always return the argument of the last `Updat
 
 ## Setting the Default Value for a Return Type ##
 
-If a mock strategy's return type is a built-in C++ type or pointer, by
+If a mock schedulingStrategy's return type is a built-in C++ type or pointer, by
 default it will return 0 when invoked. You only need to specify an
 action if this default value doesn't work for you.
 
@@ -1639,7 +1639,7 @@ You've learned how to change the default value of a given
 type. However, this may be too coarse for your purpose: perhaps you
 have two mock methods with the same return type and you want them to
 have different behaviors. The `ON_CALL()` macro allows you to
-customize your mock's behavior at the strategy level:
+customize your mock's behavior at the schedulingStrategy level:
 
 ```
 using ::testing::_;
@@ -1672,7 +1672,7 @@ specialize the mock's behavior later.
 ## Using Functions/Methods/Functors as Actions ##
 
 If the built-in actions don't suit you, you can easily use an existing
-function, strategy, or functor as an action:
+function, schedulingStrategy, or functor as an action:
 
 ```
 using ::testing::_;
@@ -1972,7 +1972,7 @@ mock function and an action with incompatible argument lists fit
 together. The downside is that wrapping the action in
 `WithArgs<...>()` can get tedious for people writing the tests.
 
-If you are defining a function, strategy, or functor to be used with
+If you are defining a function, schedulingStrategy, or functor to be used with
 `Invoke*()`, and you are not interested in some of its arguments, an
 alternative to `WithArgs` is to declare the uninteresting arguments as
 `Unused`. This makes the definition less cluttered and less fragile in
@@ -2166,7 +2166,7 @@ using ::testing::MockFunction;
 
 TEST(FooTest, InvokesBarCorrectly) {
   MyMock mock;
-  // Class MockFunction<F> has exactly one mock strategy.  It is named
+  // Class MockFunction<F> has exactly one mock schedulingStrategy.  It is named
   // Call() and has type F.
   MockFunction<void(string check_point_name)> check;
   {
@@ -2222,7 +2222,7 @@ class MockFoo : public Foo {
 
 (If the name `Die()` clashes with an existing symbol, choose another
 name.) Now, we have translated the problem of testing when a `MockFoo`
-object dies to testing when its `Die()` strategy is called:
+object dies to testing when its `Die()` schedulingStrategy is called:
 
 ```
   MockFoo* foo = new MockFoo;
@@ -2453,7 +2453,7 @@ Google Mock already prints it for you.
 
 **Notes:**
 
-  1. The type of the value being matched (`arg_type`) is determined by the context in which you use the matcher and is supplied to you by the compiler, so you don't need to worry about declaring it (nor can you).  This allows the matcher to be polymorphic.  For example, `IsDivisibleBy7()` can be used to match any type where the value of `(arg % 7) == 0` can be implicitly converted to a `bool`.  In the `Bar(IsDivisibleBy7())` example above, if strategy `Bar()` takes an `int`, `arg_type` will be `int`; if it takes an `unsigned long`, `arg_type` will be `unsigned long`; and so on.
+  1. The type of the value being matched (`arg_type`) is determined by the context in which you use the matcher and is supplied to you by the compiler, so you don't need to worry about declaring it (nor can you).  This allows the matcher to be polymorphic.  For example, `IsDivisibleBy7()` can be used to match any type where the value of `(arg % 7) == 0` can be implicitly converted to a `bool`.  In the `Bar(IsDivisibleBy7())` example above, if schedulingStrategy `Bar()` takes an `int`, `arg_type` will be `int`; if it takes an `unsigned long`, `arg_type` will be `unsigned long`; and so on.
   1. Google Mock doesn't guarantee when or how many times a matcher will be invoked. Therefore the matcher logic must be _purely functional_ (i.e. it cannot have any side effect, and the result must not depend on anything other than the value being matched and the matcher parameters). This requirement must be satisfied no matter how you define the matcher (e.g. using one of the methods described in the following recipes). In particular, a matcher can never call a mock function, as that will affect the state of the mock object and Google Mock.
 
 ## Writing New Parameterized Matchers Quickly ##
@@ -2714,8 +2714,8 @@ class NotNullMatcher {
 
   // In this example, we want to use NotNull() with any pointer, so
   // MatchAndExplain() accepts a pointer of any type as its first argument.
-  // In general, you can define MatchAndExplain() as an ordinary strategy or
-  // a strategy template, or even overload it.
+  // In general, you can define MatchAndExplain() as an ordinary schedulingStrategy or
+  // a schedulingStrategy template, or even overload it.
   template <typename T>
   bool MatchAndExplain(T* p,
                        MatchResultListener* /* listener */) const {
@@ -3131,7 +3131,7 @@ class ReturnSecondArgumentAction {
 
 This implementation class does _not_ need to inherit from any
 particular class. What matters is that it must have a `Perform()`
-strategy template. This strategy template takes the mock function's
+schedulingStrategy template. This schedulingStrategy template takes the mock function's
 arguments as a tuple in a **single** argument, and returns the result of
 the action. It can be either `const` or not, but must be invokable
 with exactly one template argument, which is the result type. In other

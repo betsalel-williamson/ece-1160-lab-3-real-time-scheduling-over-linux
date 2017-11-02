@@ -35,81 +35,19 @@ if {[file isdirectory $MAIN_EXE]} {
   exec $BUILD_SCRIPT_FILE
 }
 
+set chan [open run.log a]
+set timestamp [clock format [clock seconds]]
+puts $chan "$timestamp\n"
+
 if { [catch {set result [exec $TEST_SCRIPT_FILE]} reason] } {
 
-    puts "Failed tests: $reason"
+    puts $chan "Failed tests: $reason"
 
 } else {
 
     if { [catch {set result [exec $MAIN_EXE]} reason] } {
 
-    puts "Failed main execution: $reason"
-
-    } else {
-
-    puts $result
-
-    }
-}
-
-puts $TRACE_FILE_LOCATION
-# start of end to end tests
-# need to run  multiple scenarios
-#./vmsim –n <numframes> -a <opt|clock|aging|lru> [-r <refresh>] <tracefile>
-#//  8, 16, 32, and 64
-set OPTIONS { {-n 8 -a opt $TRACE_FILE_LOCATION}
-   {-n 16 -a opt $TRACE_FILE_LOCATION}
-   {-n 32 -a opt $TRACE_FILE_LOCATION}
-   {-n 64 -a opt $TRACE_FILE_LOCATION}
-   {-n 8 -a lru $TRACE_FILE_LOCATION}
-   {-n 16 -a lru $TRACE_FILE_LOCATION}
-   {-n 32 -a lru $TRACE_FILE_LOCATION}
-   {-n 64 -a lru $TRACE_FILE_LOCATION}
-}
-
-#set OPTIONS { {-n 8 -a aging -r 50 $TRACE_FILE_LOCATION}
-#       {-n 16 -a aging -r 50 $TRACE_FILE_LOCATION}
-#       {-n 32 -a aging -r 50 $TRACE_FILE_LOCATION}
-#       {-n 64 -a aging -r 50 $TRACE_FILE_LOCATION}
-#       {-n 8 -a aging -r 500 $TRACE_FILE_LOCATION}
-#       {-n 16 -a aging -r 500 $TRACE_FILE_LOCATION}
-#       {-n 32 -a aging -r 500 $TRACE_FILE_LOCATION}
-#       {-n 64 -a aging -r 500 $TRACE_FILE_LOCATION}
-#       {-n 8 -a aging -r 5000 $TRACE_FILE_LOCATION}
-#       {-n 16 -a aging -r 5000 $TRACE_FILE_LOCATION}
-#       {-n 32 -a aging -r 5000 $TRACE_FILE_LOCATION}
-#       {-n 64 -a aging -r 5000 $TRACE_FILE_LOCATION}
-#       {-n 8 -a aging -r 50000 $TRACE_FILE_LOCATION}
-#       {-n 16 -a aging -r 50000 $TRACE_FILE_LOCATION}
-#       {-n 32 -a aging -r 50000 $TRACE_FILE_LOCATION}
-#       {-n 64 -a aging -r 50000 $TRACE_FILE_LOCATION}
-#       {-n 8 -a clock -r 50 $TRACE_FILE_LOCATION}
-#       {-n 16 -a clock -r 50 $TRACE_FILE_LOCATION}
-#       {-n 32 -a clock -r 50 $TRACE_FILE_LOCATION}
-#       {-n 64 -a clock -r 50 $TRACE_FILE_LOCATION}
-#       {-n 8 -a clock -r 500 $TRACE_FILE_LOCATION}
-#       {-n 16 -a clock -r 500 $TRACE_FILE_LOCATION}
-#       {-n 32 -a clock -r 500 $TRACE_FILE_LOCATION}
-#       {-n 64 -a clock -r 500 $TRACE_FILE_LOCATION}
-#       {-n 8 -a clock -r 5000 $TRACE_FILE_LOCATION}
-#       {-n 16 -a clock -r 5000 $TRACE_FILE_LOCATION}
-#       {-n 32 -a clock -r 5000 $TRACE_FILE_LOCATION}
-#       {-n 64 -a clock -r 5000 $TRACE_FILE_LOCATION}
-#       {-n 8 -a clock -r 50000 $TRACE_FILE_LOCATION}
-#       {-n 16 -a clock -r 50000 $TRACE_FILE_LOCATION}
-#       {-n 32 -a clock -r 50000 $TRACE_FILE_LOCATION}
-#       {-n 64 -a clock -r 50000 $TRACE_FILE_LOCATION}
-#}
-
-set chan [open run.log a]
-set timestamp [clock format [clock seconds]]
-puts $chan "$timestamp\n"
-
-foreach option $OPTIONS {
-
-    if { [catch {set result [exec $MAIN_EXE {*}[eval list $option]]} reason] } {
-
-    puts "Failed main execution: $reason"
+    puts $chan "Failed main execution: $reason"
 
     } else {
 
@@ -118,6 +56,79 @@ foreach option $OPTIONS {
     }
 }
 
+#puts $TRACE_FILE_LOCATION
+# start of end to end tests
+# need to run  multiple scenarios
+#./vmsim –n <numframes> -a <opt|clock|aging|lru> [-r <refresh>] <tracefile>
+#//  8, 16, 32, and 64
+#set OPTIONS { {-n 8 -a opt $TRACE_FILE_LOCATION}
+#   {-n 16 -a opt $TRACE_FILE_LOCATION}
+#   {-n 32 -a opt $TRACE_FILE_LOCATION}
+#   {-n 64 -a opt $TRACE_FILE_LOCATION}
+#   {-n 8 -a lru $TRACE_FILE_LOCATION}
+#   {-n 16 -a lru $TRACE_FILE_LOCATION}
+#   {-n 32 -a lru $TRACE_FILE_LOCATION}
+#   {-n 64 -a lru $TRACE_FILE_LOCATION}
+#}
+#
+##set OPTIONS { {-n 8 -a aging -r 50 $TRACE_FILE_LOCATION}
+##       {-n 16 -a aging -r 50 $TRACE_FILE_LOCATION}
+##       {-n 32 -a aging -r 50 $TRACE_FILE_LOCATION}
+##       {-n 64 -a aging -r 50 $TRACE_FILE_LOCATION}
+##       {-n 8 -a aging -r 500 $TRACE_FILE_LOCATION}
+##       {-n 16 -a aging -r 500 $TRACE_FILE_LOCATION}
+##       {-n 32 -a aging -r 500 $TRACE_FILE_LOCATION}
+##       {-n 64 -a aging -r 500 $TRACE_FILE_LOCATION}
+##       {-n 8 -a aging -r 5000 $TRACE_FILE_LOCATION}
+##       {-n 16 -a aging -r 5000 $TRACE_FILE_LOCATION}
+##       {-n 32 -a aging -r 5000 $TRACE_FILE_LOCATION}
+##       {-n 64 -a aging -r 5000 $TRACE_FILE_LOCATION}
+##       {-n 8 -a aging -r 50000 $TRACE_FILE_LOCATION}
+##       {-n 16 -a aging -r 50000 $TRACE_FILE_LOCATION}
+##       {-n 32 -a aging -r 50000 $TRACE_FILE_LOCATION}
+##       {-n 64 -a aging -r 50000 $TRACE_FILE_LOCATION}
+##       {-n 8 -a clock -r 50 $TRACE_FILE_LOCATION}
+##       {-n 16 -a clock -r 50 $TRACE_FILE_LOCATION}
+##       {-n 32 -a clock -r 50 $TRACE_FILE_LOCATION}
+##       {-n 64 -a clock -r 50 $TRACE_FILE_LOCATION}
+##       {-n 8 -a clock -r 500 $TRACE_FILE_LOCATION}
+##       {-n 16 -a clock -r 500 $TRACE_FILE_LOCATION}
+##       {-n 32 -a clock -r 500 $TRACE_FILE_LOCATION}
+##       {-n 64 -a clock -r 500 $TRACE_FILE_LOCATION}
+##       {-n 8 -a clock -r 5000 $TRACE_FILE_LOCATION}
+##       {-n 16 -a clock -r 5000 $TRACE_FILE_LOCATION}
+##       {-n 32 -a clock -r 5000 $TRACE_FILE_LOCATION}
+##       {-n 64 -a clock -r 5000 $TRACE_FILE_LOCATION}
+##       {-n 8 -a clock -r 50000 $TRACE_FILE_LOCATION}
+##       {-n 16 -a clock -r 50000 $TRACE_FILE_LOCATION}
+##       {-n 32 -a clock -r 50000 $TRACE_FILE_LOCATION}
+##       {-n 64 -a clock -r 50000 $TRACE_FILE_LOCATION}
+##}
+#
+#set chan [open run.log a]
+#set timestamp [clock format [clock seconds]]
+#puts $chan "$timestamp\n"
+#
+#foreach option $OPTIONS {
+#
+#    if { [catch {set result [exec $MAIN_EXE {*}[eval list $option]]} reason] } {
+#
+#    puts "Failed main execution: $reason"
+#
+#    } else {
+#
+#    puts $chan $result
+#
+#    }
+#}
+
 puts $chan "\n"
 
 close $chan
+
+#  read the file one line at a time
+set fp [open "run.log" r]
+while { [gets $fp data] >= 0 } {
+     puts $data
+}
+close $fp

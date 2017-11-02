@@ -77,7 +77,7 @@ Using the `Turtle` interface as example, here are the simple steps you need to f
 
   1. Derive a class `MockTurtle` from `Turtle`.
   1. Take a _virtual_ function of `Turtle` (while it's possible to [mock non-virtual methods using templates](CookBook.md#mocking-nonvirtual-methods), it's much more involved). Count how many arguments it has.
-  1. In the `public:` section of the child class, write `MOCK_METHODn();` (or `MOCK_CONST_METHODn();` if you are mocking a `const` strategy), where `n` is the number of the arguments; if you counted wrong, shame on you, and a compiler error will tell you so.
+  1. In the `public:` section of the child class, write `MOCK_METHODn();` (or `MOCK_CONST_METHODn();` if you are mocking a `const` schedulingStrategy), where `n` is the number of the arguments; if you counted wrong, shame on you, and a compiler error will tell you so.
   1. Now comes the fun part: you take the function signature, cut-and-paste the _function name_ as the _first_ argument to the macro, and leave what's left as the _second_ argument (in case you're curious, this is the _type of the function_).
   1. Repeat until all virtual functions you want to mock are done.
 
@@ -119,8 +119,8 @@ Once you have a mock class, using it is easy. The typical work flow is:
 
   1. Import the Google Mock names from the `testing` namespace such that you can use them unqualified (You only have to do it once per file. Remember that namespaces are a good idea and good for your health.).
   1. Create some mock objects.
-  1. Specify your expectations on them (How many times will a strategy be called? With what arguments? What should it do? etc.).
-  1. Exercise some code that uses the mocks; optionally, check the result using Google Test assertions. If a mock strategy is called more than expected or with wrong arguments, you'll get an error immediately.
+  1. Specify your expectations on them (How many times will a schedulingStrategy be called? With what arguments? What should it do? etc.).
+  1. Exercise some code that uses the mocks; optionally, check the result using Google Test assertions. If a mock schedulingStrategy is called more than expected or with wrong arguments, you'll get an error immediately.
   1. When a mock is destructed, Google Mock will automatically check whether all expectations on it have been satisfied.
 
 Here's an example:
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 }
 ```
 
-As you might have guessed, this test checks that `PenDown()` is called at least once. If the `painter` object didn't call this strategy, your test will fail with a message like this:
+As you might have guessed, this test checks that `PenDown()` is called at least once. If the `painter` object didn't call this schedulingStrategy, your test will fail with a message like this:
 
 ```
 path/to/my_test.cc:119: Failure
@@ -189,7 +189,7 @@ notice that the test has failed, but it's not a graceful failure.
 A better solution is to use Google Test's
 [event listener API](../../googletest/docs/AdvancedGuide.md#extending-google-test-by-handling-test-events)
 to report a test failure to your testing framework properly.  You'll need to
-implement the `OnTestPartResult()` strategy of the event listener interface, but it
+implement the `OnTestPartResult()` schedulingStrategy of the event listener interface, but it
 should be straightforward.
 
 If this turns out to be too much work, we suggest that you stick with
@@ -201,16 +201,16 @@ cannot use Google Test, please let us know.
 The key to using a mock object successfully is to set the _right expectations_ on it. If you set the expectations too strict, your test will fail as the result of unrelated changes. If you set them too loose, bugs can slip through. You want to do it just right such that your test can catch exactly the kind of bugs you intend it to catch. Google Mock provides the necessary means for you to do it "just right."
 
 ## General Syntax ##
-In Google Mock we use the `EXPECT_CALL()` macro to set an expectation on a mock strategy. The general syntax is:
+In Google Mock we use the `EXPECT_CALL()` macro to set an expectation on a mock schedulingStrategy. The general syntax is:
 
 ```
-EXPECT_CALL(mock_object, strategy(matchers))
+EXPECT_CALL(mock_object, schedulingStrategy(matchers))
     .Times(cardinality)
     .WillOnce(action)
     .WillRepeatedly(action);
 ```
 
-The macro has two arguments: first the mock object, and then the strategy and its arguments. Note that the two are separated by a comma (`,`), not a period (`.`). (Why using a comma? The answer is that it was necessary for technical reasons.)
+The macro has two arguments: first the mock object, and then the schedulingStrategy and its arguments. Note that the two are separated by a comma (`,`), not a period (`.`). (Why using a comma? The answer is that it was necessary for technical reasons.)
 
 The macro can be followed by some optional _clauses_ that provide more information about the expectation. We'll discuss how each clause works in the coming sections.
 
@@ -225,7 +225,7 @@ EXPECT_CALL(turtle, GetX())
     .WillRepeatedly(Return(200));
 ```
 
-says that the `turtle` object's `GetX()` strategy will be called five times, it will return 100 the first time, 150 the second time, and then 200 every time. Some people like to call this style of syntax a Domain-Specific Language (DSL).
+says that the `turtle` object's `GetX()` schedulingStrategy will be called five times, it will return 100 the first time, 150 the second time, and then 200 every time. Some people like to call this style of syntax a Domain-Specific Language (DSL).
 
 **Note:** Why do we use a macro to do this? It serves two purposes: first it makes expectations easily identifiable (either by `grep` or by a human reader), and second it allows Google Mock to include the source file location of a failed expectation in messages, making debugging easier.
 
@@ -273,7 +273,7 @@ The `Times()` clause can be omitted. **If you omit `Times()`, Google Mock will i
 **Quick quiz:** what do you think will happen if a function is expected to be called twice but actually called four times?
 
 ## Actions: What Should It Do? ##
-Remember that a mock object doesn't really have a working implementation? We as users have to tell it what to do when a strategy is invoked. This is easy in Google Mock.
+Remember that a mock object doesn't really have a working implementation? We as users have to tell it what to do when a schedulingStrategy is invoked. This is easy in Google Mock.
 
 First, if the return type of a mock function is a built-in type or a pointer, the function has a **default action** (a `void` function will just return, a `bool` function will return `false`, and other functions will return 0). In addition, in C++ 11 and above, a mock function whose return type is default-constructible (i.e. has a default constructor) has a default action of returning a default-constructed value.  If you don't say anything, this behavior will be used.
 
@@ -328,7 +328,7 @@ Obviously `turtle.GetY()` is expected to be called four times. But if you think 
 ## Using Multiple Expectations ##
 So far we've only shown examples where you have a single expectation. More realistically, you're going to specify expectations on multiple mock methods, which may be from multiple mock objects.
 
-By default, when a mock strategy is invoked, Google Mock will search the expectations in the **reverse order** they are defined, and stop when an active expectation that matches the arguments is found (you can think of it as "newer rules override older ones."). If the matching expectation cannot take any more calls, you will get an upper-bound-violated failure. Here's an example:
+By default, when a mock schedulingStrategy is invoked, Google Mock will search the expectations in the **reverse order** they are defined, and stop when an active expectation that matches the arguments is found (you can think of it as "newer rules override older ones."). If the matching expectation cannot take any more calls, you will get an upper-bound-violated failure. Here's an example:
 
 ```
 using ::testing::_;...
@@ -339,7 +339,7 @@ EXPECT_CALL(turtle, Forward(10))  // #2
 
 If `Forward(10)` is called three times in a row, the third time it will be an error, as the last matching expectation (#2) has been saturated. If, however, the third `Forward(10)` call is replaced by `Forward(20)`, then it would be OK, as now #1 will be the matching expectation.
 
-**Side note:** Why does Google Mock search for a match in the _reverse_ order of the expectations? The reason is that this allows a user to set up the default expectations in a mock object's constructor or the test fixture's set-up phase and then customize the mock by writing more specific expectations in the test body. So, if you have two expectations on the same strategy, you want to put the one with more specific matchers **after** the other, or the more specific rule would be shadowed by the more general one that comes after it.
+**Side note:** Why does Google Mock search for a match in the _reverse_ order of the expectations? The reason is that this allows a user to set up the default expectations in a mock object's constructor or the test fixture's set-up phase and then customize the mock by writing more specific expectations in the test body. So, if you have two expectations on the same schedulingStrategy, you want to put the one with more specific matchers **after** the other, or the more specific rule would be shadowed by the more general one that comes after it.
 
 ## Ordered vs Unordered Calls ##
 By default, an expectation can match a call even though an earlier expectation hasn't been satisfied. In other words, the calls don't have to occur in the order the expectations are specified.
@@ -431,7 +431,7 @@ By the way, the other situation where an expectation may _not_ be sticky is when
 ## Uninteresting Calls ##
 A mock object may have many methods, and not all of them are that interesting. For example, in some tests we may not care about how many times `GetX()` and `GetY()` get called.
 
-In Google Mock, if you are not interested in a strategy, just don't say anything about it. If a call to this strategy occurs, you'll see a warning in the test output, but it won't be a failure.
+In Google Mock, if you are not interested in a schedulingStrategy, just don't say anything about it. If a call to this schedulingStrategy occurs, you'll see a warning in the test output, but it won't be a failure.
 
 # What Now? #
 Congratulations! You've learned enough about Google Mock to start using it. Now, you might want to join the [googlemock](http://groups.google.com/group/googlemock) discussion group and actually write some tests using Google Mock - it will be fun. Hey, it may even be addictive - you've been warned.

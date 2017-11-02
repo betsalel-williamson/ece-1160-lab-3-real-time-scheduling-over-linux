@@ -6,43 +6,121 @@
 
 #include "ece1160lab3lib.h"
 
+typedef struct ProcessInformation {
+    int *period;
+    int *timeRequiredToExecute;
+    int *processIteration;
+    int *timeCompleted;
+
+    int (*isProcessFinished)(int, int);
+
+    int (*isProcessRunning)(int *);
+} process;
+
+int isProcessRunning(const int *running) {
+    return *running == 1;
+}
+
+int isProcessFinished(int timeLeft, int timeRequiredToExecute) {
+    return timeLeft == timeRequiredToExecute + 1;
+}
 
 void
 EDFStrategy(int serveA, int cycA, int numa, int a, int *ka, int serveB, int cycB, int numb, int b, int *kb, int T) {
 
     int timeLeftForA = serveA - numa;
     int isAFinished = numa == serveA + 1;
+    int isARunning = *ka == 1;
     int timeLeftForB = serveB - numb;
     int isBFinished = numb == serveB + 1;
+    int isBRunning = *kb == 1;
 
-    if (*ka == 1 && !isBFinished && timeLeftForB < timeLeftForA) {
+    if (isBRunning && !isAFinished && timeLeftForA < timeLeftForB) {
         printf("when T=%d, ", T);
-        printf("run process B%d\n", b);
-        *kb = 1;
-        *ka = 0;
-    } else if (*kb == 1 && !isAFinished && timeLeftForA < timeLeftForB) {
-        printf("when T=%d, ", T);
+        printf("time left for A%d is %d,", a, timeLeftForA);
+        printf("time left for B%d is %d,", b, timeLeftForB);
         printf("run process A%d\n", a);
         *kb = 0;
         *ka = 1;
-    }
-}
-
-void RMSStrategy(int serveA, int cycA, int numa, int a, int *ka, int serveB, int cycB, int numb,  int b, int *kb, int T){
-    /* this block is to check if CPU can schedule*/
-    // if the period of A is less than B then it should have priority.
-    if (cycA < cycB) {
-        *kb = 0;
-        *ka = 1;
-        //please write the code for this block by yourself
-    } else {
+    } else if (isARunning && !isBFinished && timeLeftForB < timeLeftForA) {
+        printf("when T=%d, ", T);
+        printf("time left for A%d is %d,", a, timeLeftForA);
+        printf("time left for B%d is %d,", b, timeLeftForB);
+        printf("run process B%d\n", b);
         *kb = 1;
         *ka = 0;
+    } else {
+        // do nothing
     }
-
 }
 
-void runProgram(int serveA, int cycA, int serveB, int cycB, strategy algoMethod, const char * algoName){
+void
+RMSStrategy(int serveA, int cycA, int numa, int a, int *ka, int serveB, int cycB, int numb, int b, int *kb, int T) {
+
+    int periodOfA = cycA;
+    int timeLeftForA = serveA - numa;
+    int isAFinished = numa == serveA + 1;
+    int isARunning = *ka == 1;
+
+    int periodOfB = cycB;
+    int timeLeftForB = serveB - numb;
+    int isBFinished = numb == serveB + 1;
+    int isBRunning = *kb == 1;
+
+    if (isBRunning && !isAFinished && periodOfA < periodOfB) {
+        printf("when T=%d, ", T);
+        printf("time left for A%d is %d,", a, timeLeftForA);
+        printf("time left for B%d is %d,", b, timeLeftForB);
+        printf("run process A%d\n", a);
+        *kb = 0;
+        *ka = 1;
+    } else if (isARunning && !isBFinished && periodOfB < periodOfA) {
+        printf("when T=%d, ", T);
+        printf("time left for A%d is %d,", a, timeLeftForA);
+        printf("time left for B%d is %d,", b, timeLeftForB);
+        printf("run process B%d\n", b);
+        *kb = 1;
+        *ka = 0;
+    } else {
+        // do nothing
+    }
+
+//    /* this block is to check if CPU can schedule*/
+//    // if the period of A is less than B then it should have priority.
+//    if (cycA < cycB) {
+//        printf("time left for A%d is %d,", a, timeLeftForA);
+//        printf("time left for B%d is %d,", b, timeLeftForB);
+//        *kb = 0;
+//        *ka = 1;
+//        //please write the code for this block by yourself
+//    } else {
+//        printf("time left for A%d is %d,", a, timeLeftForA);
+//        printf("time left for B%d is %d,", b, timeLeftForB);
+//        *kb = 1;
+//        *ka = 0;
+//    }
+
+//    int isAFinished = numa == serveA + 1;
+//    int isBFinished = numb == serveB + 1;
+//
+//    if (*kb == 1 && !isAFinished && cycA < cycB) {
+//        printf("when T=%d, ", T);
+//        printf("run process A%d\n", a);
+//        *kb = 0;
+//        *ka = 1;
+//    } else if (*ka == 1 && !isBFinished && cycB < cycA) {
+//        printf("when T=%d, ", T);
+//        printf("run process B%d\n", b);
+//        *kb = 1;
+//        *ka = 0;
+//    } else {
+//        // do nothing
+//    }
+}
+
+void
+runSchedulingProgram(int serveA, int cycA, int serveB, int cycB, schedulingStrategy strategy, const char *algoName) {
+    process p1, p2;
 
     int A, B;                           //arrival time of process A and B
 //    int cycA, cycB, serveA, serveB;         //period and execution for A and B processes
@@ -54,7 +132,12 @@ void runProgram(int serveA, int cycA, int serveB, int cycB, strategy algoMethod,
     printf("\t\t\t------------------------------------------------\n");
     printf("\t\t\t\t%s schedule algorithm\n", algoName);
     printf("\t\t\t------------------------------------------------\n");
-    printf("Process A runs every %d seconds and needs %d seconds to finish\n", cycA, serveA);
+
+    p1.period = &cycA;
+    p1.timeRequiredToExecute = &serveA;
+    p1.isProcessRunning = isProcessRunning(&ka);
+
+            printf("Process A runs every %d seconds and needs %d seconds to finish\n", cycA, serveA);
     printf("Process B runs every %d seconds and needs %d seconds to finish\n", cycB, serveB);
 
     m = (float) serveA / cycA + (float) serveB / cycB;
@@ -64,7 +147,7 @@ void runProgram(int serveA, int cycA, int serveB, int cycB, strategy algoMethod,
         /* this block is to check if CPU can schedule*/
         // if the period of A is less than B then it should have priority.
 
-        algoMethod(serveA, cycA, numa, a, &ka, serveB, cycB, numb, b, &kb, T);
+        strategy(serveA, cycA, numa, a, &ka, serveB, cycB, numb, b, &kb, T);
 
         ///////// DON'T MODIFY THE CODE BELOW //////////
 

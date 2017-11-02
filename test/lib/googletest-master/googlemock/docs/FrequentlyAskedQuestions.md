@@ -5,9 +5,9 @@ Please send your questions to the
 group. If you need help with compiler errors, make sure you have
 tried [Google Mock Doctor](#How_am_I_supposed_to_make_sense_of_these_horrible_template_error.md) first.
 
-## When I call a strategy on my mock object, the strategy for the real object is invoked instead.  What's the problem? ##
+## When I call a schedulingStrategy on my mock object, the schedulingStrategy for the real object is invoked instead.  What's the problem? ##
 
-In order for a strategy to be mocked, it must be _virtual_, unless you use the [high-perf dependency injection technique](CookBook.md#mocking-nonvirtual-methods).
+In order for a schedulingStrategy to be mocked, it must be _virtual_, unless you use the [high-perf dependency injection technique](CookBook.md#mocking-nonvirtual-methods).
 
 ## I wrote some matchers.  After I upgraded to a new version of Google Mock, they no longer compile.  What's going on? ##
 
@@ -127,7 +127,7 @@ class MyGreatMatcher {
 ... MakePolymorphicMatcher(MyGreatMatcher()) ...
 ```
 
-you should rename the `Matches()` strategy to `MatchAndExplain()` and
+you should rename the `Matches()` schedulingStrategy to `MatchAndExplain()` and
 add a `MatchResultListener*` argument (the same as what you need to do
 for matchers defined by implementing `MatcherInterface`):
 ```
@@ -238,7 +238,7 @@ You cannot mock a variadic function (i.e. a function taking ellipsis
 (`...`) arguments) directly in Google Mock.
 
 The problem is that in general, there is _no way_ for a mock object to
-know how many arguments are passed to the variadic strategy, and what
+know how many arguments are passed to the variadic schedulingStrategy, and what
 the arguments' types are.  Only the _author of the base class_ knows
 the protocol, and we cannot look into his head.
 
@@ -251,7 +251,7 @@ They are unsafe to use and don't work with arguments that have
 constructors or destructors.  Therefore we recommend to avoid them in
 C++ as much as possible.
 
-## MSVC gives me warning C4301 or C4373 when I define a mock strategy with a const parameter.  Why? ##
+## MSVC gives me warning C4301 or C4373 when I define a mock schedulingStrategy with a const parameter.  Why? ##
 
 If you compile this using Microsoft Visual C++ 2005 SP1:
 ```
@@ -290,7 +290,7 @@ In fact, you can _declare_ Bar() with an `int` parameter, and _define_
 it with a `const int` parameter.  The compiler will still match them
 up.
 
-Since making a parameter `const` is meaningless in the strategy
+Since making a parameter `const` is meaningless in the schedulingStrategy
 _declaration_, we recommend to remove it in both `Foo` and `MockFoo`.
 That should workaround the VC bug.
 
@@ -444,7 +444,7 @@ constructor or `SetUp()`, as the default behavior rarely changes from
 test to test.  Then in the test body they set the expectations, which
 are often different for each test.  Having an `ON_CALL` in the set-up
 part of a test doesn't mean that the calls are expected.  If there's
-no `EXPECT_CALL` and the strategy is called, it's possibly an error.  If
+no `EXPECT_CALL` and the schedulingStrategy is called, it's possibly an error.  If
 we quietly let the call go through without notifying the user, bugs
 may creep in unnoticed.
 
@@ -512,7 +512,7 @@ You still need a `typedef` if the return type contains an unprotected
 comma, but that's much rarer.
 
 Other advantages include:
-  1. `MOCK_METHOD1(Foo, int, bool)` can leave a reader wonder whether the strategy returns `int` or `bool`, while there won't be such confusion using Google Mock's syntax.
+  1. `MOCK_METHOD1(Foo, int, bool)` can leave a reader wonder whether the schedulingStrategy returns `int` or `bool`, while there won't be such confusion using Google Mock's syntax.
   1. The way Google Mock describes a function type is nothing new, although many people may not be familiar with it.  The same syntax was used in C, and the `function` library in `tr1` uses this syntax extensively.  Since `tr1` will become a part of the new version of STL, we feel very comfortable to be consistent with it.
   1. The function type syntax is also used in other parts of Google Mock's API (e.g. the action interface) in order to make the implementation tractable. A user needs to learn it anyway in order to utilize Google Mock's more advanced features.  We'd as well stick to the same syntax in `MOCK_METHOD*`!
 
@@ -595,7 +595,7 @@ functions the action can be used in, and implementing
 ## I'm using the set-argument-pointee action, and the compiler complains about "conflicting return type specified".  What does it mean? ##
 
 You got this error as Google Mock has no idea what value it should return
-when the mock strategy is called.  `SetArgPointee()` says what the
+when the mock schedulingStrategy is called.  `SetArgPointee()` says what the
 side effect is, but doesn't say what the return value should be.  You
 need `DoAll()` to chain a `SetArgPointee()` with a `Return()`.
 

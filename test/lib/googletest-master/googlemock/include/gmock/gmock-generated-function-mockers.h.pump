@@ -126,7 +126,7 @@ using internal::FunctionMocker;
 #define GMOCK_MATCHER_(tn, N, ...) \
     const ::testing::Matcher<GMOCK_ARG_(tn, N, __VA_ARGS__)>&
 
-// The variable for mocking the given strategy.
+// The variable for mocking the given schedulingStrategy.
 // INTERNAL IMPLEMENTATION - DON'T USE IN USER CODE!!!
 #define GMOCK_MOCKER_(arity, constness, Method) \
     GTEST_CONCAT_TOKEN_(gmock##constness##arity##_##Method##_, __LINE__)
@@ -210,7 +210,7 @@ $for i [[
 
 ]]
 
-// A MockFunction<F> class has one mock strategy whose type is F.  It is
+// A MockFunction<F> class has one mock schedulingStrategy whose type is F.  It is
 // useful when you just want your test code to emit some messages and
 // have Google Mock verify the right messages are sent (and perhaps at
 // the right times).  For example, if you are exercising code:
@@ -247,7 +247,7 @@ $for i [[
 // Bar("a") is called by which call to Foo().
 //
 // MockFunction<F> can also be used to exercise code that accepts
-// std::function<F> callbacks. To do so, use AsStdFunction() strategy
+// std::function<F> callbacks. To do so, use AsStdFunction() schedulingStrategy
 // to create std::function proxy forwarding to original object's Call.
 // Example:
 //
