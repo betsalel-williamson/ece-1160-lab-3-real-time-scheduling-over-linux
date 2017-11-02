@@ -89,6 +89,6 @@ include_directories(${${PROJECT_LIBS_NAME}_SOURCE_DIR}/include
 
 find_package (Threads)
 
-add_executable(${PROJECT_NAME} sample-code/rms.c)
+add_executable(${PROJECT_NAME} sample-code/edf.c)
 
 target_link_libraries(${PROJECT_NAME} ${PROJECT_LIBS_NAME} ${CMAKE_THREAD_LIBS_INIT})
