@@ -5,14 +5,29 @@
 #ifndef ECE_1160_LAB_3_REAL_TIME_SCHEDULING_OVER_LINUX_DUMMY_H
 #define ECE_1160_LAB_3_REAL_TIME_SCHEDULING_OVER_LINUX_DUMMY_H
 
-typedef void (*schedulingStrategy)(int serveA, int cycA, int numa, int a, int *ka, int serveB, int cycB, int numb, int b, int *kb,
-                         int T);
+#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <assert.h>
 
-void EDFStrategy(int serveA, int cycA, int numa, int a, int *ka, int serveB, int cycB, int numb, int b, int *kb, int T);
+typedef struct process {
+    int *timeNeeded; // serveA
+    int *timeCompleted; // numa
+    int *period; // cycA
+    int *iteration; // a
+    int *isRunning; // *ka
+} process;
 
-void RMSStrategy(int serveA, int cycA, int numa, int a, int *ka, int serveB, int cycB, int numb, int b, int *kb, int T);
+int processDoesntContainNull(process *process);
 
-void runSchedulingProgram(int serveA, int cycA, int serveB, int cycB, schedulingStrategy strategy, const char *algoName);
+typedef void (*schedulingStrategy)(process *processA, process *processB, int timeElapsed);
+
+void EDFStrategy(process *processA, process *processB, int timeElapsed);
+
+void RMSStrategy(process *processA, process *processB, int timeElapsed);
+
+void
+runSchedulingProgram(int serveA, int cycA, int serveB, int cycB, schedulingStrategy strategy, const char *algoName);
 
 void runEDF(int serveA, int cycA, int serveB, int cycB);
 

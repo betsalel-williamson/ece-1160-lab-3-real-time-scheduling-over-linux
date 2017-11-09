@@ -2,66 +2,77 @@
 // Created by School on 11/1/17.
 //
 
-#include <stdio.h>
-
 #include "ece1160lab3lib.h"
 
-void
-EDFStrategy(int serveA, int cycA, int numa, int a, int *ka, int serveB, int cycB, int numb, int b, int *kb, int T) {
+int processDoesntContainNull(process *process) {
+    return process->timeNeeded != NULL &&
+           process->timeCompleted != NULL &&
+           process->isRunning != NULL &&
+           process->iteration != NULL &&
+           process->period != NULL;
+}
 
-    int timeLeftForA = serveA - numa;
-    int isAFinished = numa == serveA + 1;
-    int isARunning = *ka == 1;
-    int timeLeftForB = serveB - numb;
-    int isBFinished = numb == serveB + 1;
-    int isBRunning = *kb == 1;
+void
+EDFStrategy(process *processA, process *processB, int timeElapsed) {
+
+    assert(processDoesntContainNull(processA));
+    assert(processDoesntContainNull(processB));
+
+    int timeLeftForA = *(processA->timeNeeded) - *(processA->timeCompleted);
+    int isAFinished = *(processA->timeCompleted) == *(processA->timeNeeded) + 1;
+    int isARunning = *(processA->isRunning) == true;
+
+    int timeLeftForB = *(processB->timeNeeded) - *(processB->timeCompleted);
+    int isBFinished = *(processB->timeCompleted) == *(processB->timeNeeded) + 1;
+    int isBRunning = *(processB->isRunning) == true;
 
     if (isBRunning && !isAFinished && timeLeftForA < timeLeftForB) {
-        printf("when T=%d, ", T);
-        printf("time left for A%d is %d,", a, timeLeftForA);
-        printf("time left for B%d is %d,", b, timeLeftForB);
-        printf("run process A%d\n", a);
-        *kb = 0;
-        *ka = 1;
+        printf("when T=%d, ", timeElapsed);
+        printf("time left for A%d is %d,", *(processA->iteration), timeLeftForA);
+        printf("time left for B%d is %d,", *(processB->iteration), timeLeftForB);
+        printf("run process A%d\n", *(processA->iteration));
+        *(processB->isRunning) = false;
+        *(processA->isRunning) = true;
     } else if (isARunning && !isBFinished && timeLeftForB < timeLeftForA) {
-        printf("when T=%d, ", T);
-        printf("time left for A%d is %d,", a, timeLeftForA);
-        printf("time left for B%d is %d,", b, timeLeftForB);
-        printf("run process B%d\n", b);
-        *kb = 1;
-        *ka = 0;
+        printf("when T=%d, ", timeElapsed);
+        printf("time left for A%d is %d,", *(processA->iteration), timeLeftForA);
+        printf("time left for B%d is %d,", *(processB->iteration), timeLeftForB);
+        printf("run process B%d\n", *(processB->iteration));
+        *(processB->isRunning) = true;
+        *(processA->isRunning) = false;
     } else {
         // do nothing
     }
 }
 
 void
-RMSStrategy(int serveA, int cycA, int numa, int a, int *ka, int serveB, int cycB, int numb, int b, int *kb, int T) {
+RMSStrategy(process *processA, process *processB, int timeElapsed) {
 
-    int periodOfA = cycA;
-    int timeLeftForA = serveA - numa;
-    int isAFinished = numa == serveA + 1;
-    int isARunning = *ka == 1;
+    assert(processDoesntContainNull(processA));
+    assert(processDoesntContainNull(processB));
 
-    int periodOfB = cycB;
-    int timeLeftForB = serveB - numb;
-    int isBFinished = numb == serveB + 1;
-    int isBRunning = *kb == 1;
+    int timeLeftForA = *(processA->timeNeeded) - *(processA->timeCompleted);
+    int isAFinished = *(processA->timeCompleted) == *(processA->timeNeeded) + 1;
+    int isARunning = *(processA->isRunning) == true;
 
-    if (isBRunning && !isAFinished && periodOfA < periodOfB) {
-        printf("when T=%d, ", T);
-        printf("time left for A%d is %d,", a, timeLeftForA);
-        printf("time left for B%d is %d,", b, timeLeftForB);
-        printf("run process A%d\n", a);
-        *kb = 0;
-        *ka = 1;
-    } else if (isARunning && !isBFinished && periodOfB < periodOfA) {
-        printf("when T=%d, ", T);
-        printf("time left for A%d is %d,", a, timeLeftForA);
-        printf("time left for B%d is %d,", b, timeLeftForB);
-        printf("run process B%d\n", b);
-        *kb = 1;
-        *ka = 0;
+    int timeLeftForB = *(processB->timeNeeded) - *(processB->timeCompleted);
+    int isBFinished = *(processB->timeCompleted) == *(processB->timeNeeded) + 1;
+    int isBRunning = *(processB->isRunning) == true;
+
+    if (isBRunning && !isAFinished && *(processA->period) < *(processB->period)) {
+        printf("when T=%d, ", timeElapsed);
+        printf("time left for A%d is %d,", *(processA->iteration), timeLeftForA);
+        printf("time left for B%d is %d,", *(processB->iteration), timeLeftForB);
+        printf("run process A%d\n", *(processA->iteration));
+        *(processB->isRunning) = false;
+        *(processA->isRunning) = true;
+    } else if (isARunning && !isBFinished && *(processB->period) < *(processA->period)) {
+        printf("when T=%d, ", timeElapsed);
+        printf("time left for A%d is %d,", *(processA->iteration), timeLeftForA);
+        printf("time left for B%d is %d,", *(processB->iteration), timeLeftForB);
+        printf("run process B%d\n", *(processB->iteration));
+        *(processB->isRunning) = true;
+        *(processA->isRunning) = false;
     } else {
         // do nothing
     }
@@ -87,12 +98,28 @@ runSchedulingProgram(int serveA, int cycA, int serveB, int cycB, schedulingStrat
 
     m = (float) serveA / cycA + (float) serveB / cycB;
 
+    process *processA;
+    process *processB;
+    processA = malloc(sizeof(process));
+    processA->period = &cycA;
+    processA->iteration = &a;
+    processA->isRunning = &ka;
+    processA->timeCompleted = &numa;
+    processA->timeNeeded = &serveA;
+
+    processB = malloc(sizeof(process));
+    processB->period = &cycB;
+    processB->iteration = &b;
+    processB->isRunning = &kb;
+    processB->timeCompleted = &numb;
+    processB->timeNeeded = &serveB;
+
     for (T = 0; T <= 100; T++) {
 
         /* this block is to check if CPU can schedule*/
         // if the period of A is less than B then it should have priority.
 
-        strategy(serveA, cycA, numa, a, &ka, serveB, cycB, numb, b, &kb, T);
+        strategy(processA, processB, T);
 
         ///////// DON'T MODIFY THE CODE BELOW //////////
 
@@ -196,6 +223,21 @@ runSchedulingProgram(int serveA, int cycA, int serveB, int cycB, schedulingStrat
             numb++;
         }
     }
+
+    /// clean up 
+    processA->period = NULL;
+    processA->iteration = NULL;
+    processA->isRunning = NULL;
+    processA->timeCompleted = NULL;
+    processA->timeNeeded = NULL;
+    free(processA);
+
+    processB->period = NULL;
+    processB->iteration = NULL;
+    processB->isRunning = NULL;
+    processB->timeCompleted = NULL;
+    processB->timeNeeded = NULL;
+    free(processB);
 }
 
 void runEDF(int serveA, int cycA, int serveB, int cycB) {
