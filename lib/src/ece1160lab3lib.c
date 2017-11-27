@@ -224,7 +224,7 @@ runSchedulingProgram(int serveA, int cycA, int serveB, int cycB, schedulingStrat
         }
     }
 
-    /// clean up 
+    /// clean up
     processA->period = NULL;
     processA->iteration = NULL;
     processA->isRunning = NULL;
