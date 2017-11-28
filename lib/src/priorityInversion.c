@@ -149,6 +149,14 @@ int runPriorityInversion() {
         return EXIT_FAILURE;
     }
 
+    pthread_attr_setschedparam(&attr, &(struct sched_param) {.sched_priority=threadMax});
+    if (pthread_create(&threads[2], &attr, (void *(*)(void *)) function3, NULL)) {
+
+        fprintf(stderr, "Error creating thread\n");
+        return EXIT_FAILURE;
+
+    }
+
     pthread_attr_setschedparam(&attr, &(struct sched_param) {.sched_priority=threadMiddle});
     if (pthread_create(&threads[1], &attr, (void *(*)(void *)) function2, NULL)) {
 
@@ -157,13 +165,6 @@ int runPriorityInversion() {
 
     }
 
-    pthread_attr_setschedparam(&attr, &(struct sched_param) {.sched_priority=threadMax});
-    if (pthread_create(&threads[2], &attr, (void *(*)(void *)) function3, NULL)) {
-
-        fprintf(stderr, "Error creating thread\n");
-        return EXIT_FAILURE;
-
-    }
 
     pthread_attr_destroy(&attr);
 
